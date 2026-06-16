@@ -1,0 +1,29 @@
+<Window
+    x:Class="WAExport.PreviewWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Önizləmə">
+
+    <Grid RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1"
+                Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid Padding="14,10" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Önizləmə" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Content="Bağla" Click="CloseButton_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- WebView2 -->
+        <WebView2 Grid.Row="1" x:Name="WebView" VerticalAlignment="Stretch"/>
+    </Grid>
+</Window>

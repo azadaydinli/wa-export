@@ -1,0 +1,234 @@
+<Window
+    x:Class="WAExport.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="WA Export">
+
+    <Grid RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Main content -->
+        <StackPanel Grid.Row="0" Spacing="10" Padding="18,18,18,8" VerticalAlignment="Top">
+
+            <!-- Import card -->
+            <Border x:Name="ImportCard" CornerRadius="10" Padding="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <Grid Height="100">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- FAYL SEÇ -->
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <Button x:Name="OpenFileButton" Content="FAYL SEÇ"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Click="OpenFileButton_Click"/>
+                    </StackPanel>
+
+                    <Rectangle Grid.Column="1" Width="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,12"/>
+
+                    <!-- Info text -->
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Padding="16,0" Spacing="4">
+                        <TextBlock Text="Dəstəklənən format" Style="{StaticResource BodyStrongTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <TextBlock Text="WhatsApp tətbiqindən ixrac edilmiş ZIP (arxiv) faylları dəstəklənir."
+                                   Style="{StaticResource BodyTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Chat info card (visible when file loaded) -->
+            <Border x:Name="ChatInfoCard" CornerRadius="10" Padding="14"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="Collapsed">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Grid.Column="0" Glyph="&#xE77B;" FontSize="32"
+                              Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                              VerticalAlignment="Center"/>
+
+                    <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock x:Name="ChatNameText" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="ChatStatsText" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+
+                    <!-- Segmented date control -->
+                    <Border Grid.Column="2" CornerRadius="6" Padding="2"
+                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <ToggleButton x:Name="AllPeriodToggle" Content="BÜTÜN DÖVR"
+                                          IsChecked="True" Click="DateToggle_Click" Tag="all"
+                                          FontSize="11" Padding="10,4"/>
+                            <ToggleButton x:Name="DateRangeToggle" Content="TARİX ARALIĞI"
+                                          Click="DateToggle_Click" Tag="range"
+                                          FontSize="11" Padding="10,4"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Parties card -->
+            <Border x:Name="PartiesCard" CornerRadius="10" Padding="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="TƏRƏF MƏLUMATLARI" Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               HorizontalAlignment="Center" Margin="0,12,0,8"/>
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="10,0"/>
+
+                    <Grid Padding="14,10,14,12" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <!-- BİRİNCİ TƏRƏF -->
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="140"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Grid.Column="0" Glyph="&#xE8B7;" FontSize="14"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="BİRİNCİ TƏRƏF"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" x:Name="MyNameBox"
+                                         PlaceholderText="Ad" TextChanged="MyNameBox_TextChanged"/>
+                                <TextBox Grid.Column="3" x:Name="MyPhoneBox"
+                                         PlaceholderText="+994 __ ___ __ __" TextChanged="MyPhoneBox_TextChanged"/>
+                            </Grid>
+
+                            <!-- DİGƏR TƏRƏF -->
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="80"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="140"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Grid.Column="0" Glyph="&#xE8B8;" FontSize="14"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="DİGƏR TƏRƏF"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" x:Name="OtherNameBox"
+                                         PlaceholderText="Ad" TextChanged="OtherNameBox_TextChanged"/>
+                                <TextBox Grid.Column="3" x:Name="OtherPhoneBox"
+                                         PlaceholderText="+994 __ ___ __ __" TextChanged="OtherPhoneBox_TextChanged"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Swap button -->
+                        <Button Grid.Column="1" x:Name="SwapButton" Click="SwapButton_Click"
+                                VerticalAlignment="Center" Padding="10,6">
+                            <FontIcon Glyph="&#xE8CB;" FontSize="14"/>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Date range card -->
+            <Border x:Name="DateRangeCard" CornerRadius="10" Padding="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Padding="16,10" Spacing="4">
+                        <TextBlock Text="BAŞLANĞIC TARİXİ" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <CalendarDatePicker x:Name="StartDatePicker" HorizontalAlignment="Stretch"
+                                            DateChanged="StartDatePicker_DateChanged"/>
+                    </StackPanel>
+
+                    <Rectangle Grid.Column="1" Width="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,8"/>
+
+                    <StackPanel Grid.Column="2" Padding="16,10" Spacing="4">
+                        <TextBlock Text="BİTMƏ TARİXİ" Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <CalendarDatePicker x:Name="EndDatePicker" HorizontalAlignment="Stretch"
+                                            DateChanged="EndDatePicker_DateChanged"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Action row -->
+            <Grid x:Name="ActionRow" ColumnSpacing="10" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" x:Name="PreviewButton"
+                        HorizontalAlignment="Stretch" Height="40"
+                        Click="PreviewButton_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE7B3;" FontSize="14"/>
+                        <TextBlock Text="BAXIŞ KEÇİR"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="1" x:Name="ExportButton"
+                        Style="{StaticResource AccentButtonStyle}"
+                        HorizontalAlignment="Stretch" Height="40"
+                        Click="ExportButton_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE898;" FontSize="14"/>
+                        <TextBlock Text="İXRAC ET"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Progress -->
+            <StackPanel x:Name="ProgressPanel" Spacing="4" Visibility="Collapsed">
+                <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="1"/>
+                <TextBlock x:Name="StatusText" Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+        </StackPanel>
+
+        <!-- Footer -->
+        <Border Grid.Row="1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
+                Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6" Padding="0,8">
+                <TextBlock Text="Azad Aydınlı" Style="{StaticResource CaptionTextBlockStyle}"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="·" Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                <TextBlock Text="azad.aydinli@gmail.com" Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
