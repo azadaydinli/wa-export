@@ -16,7 +16,6 @@ public sealed partial class PreviewWindow : Window
         _htmlPath = htmlPath;
         InitializeComponent();
         ConfigureWindow();
-        WebView.NavigationCompleted += WebView_NavigationCompleted;
         _ = InitWebViewAsync();
     }
 
@@ -38,15 +37,12 @@ public sealed partial class PreviewWindow : Window
             CoreWebView2HostResourceAccessKind.Allow);
         WebView.CoreWebView2.Navigate($"https://waexport.local/{Path.GetFileName(_htmlPath)}");
 
-        // Open external links in default browser
-        WebView.CoreWebView2.NewWindowRequested += (_, e) =>
+        WebView.CoreWebView2.NewWindowRequested += (sender, e) =>
         {
             e.Handled = true;
-            _ = Windows.System.Launcher.LaunchUriAsync(new Uri(e.Uri));
+            Windows.System.Launcher.LaunchUriAsync(new Uri(e.Uri));
         };
     }
-
-    private void WebView_NavigationCompleted(WebView2 sender, CoreWebView2NavigationCompletedEventArgs e) { }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
 }

@@ -163,7 +163,7 @@ public sealed partial class MainWindow : Window
 
     private void DateToggle_Click(object sender, RoutedEventArgs e)
     {
-        var useRange = (sender as ToggleButton)?.Tag?.ToString() == "range";
+        var useRange = (sender as FrameworkElement)?.Tag?.ToString() == "range";
         AllPeriodToggle.IsChecked  = !useRange;
         DateRangeToggle.IsChecked  = useRange;
         _proc.UseCustomDateRange   = useRange;
