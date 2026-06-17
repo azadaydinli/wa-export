@@ -58,33 +58,45 @@ public static class HTMLGenerator
         string participantsBar;
         if (isGroup)
         {
+            var myLabel    = string.IsNullOrEmpty(myDisplayName) ? mySenderRaw : myDisplayName;
+            var myPhoneRow = string.IsNullOrEmpty(myPhone) ? "" : $"<div class=\"p-phone\">{H(myPhone)}</div>";
+
+            // Info section: only participants with a phone, one per line
             var infoRows = new StringBuilder();
-            foreach (var p in gpList)
+            foreach (var p in gpList.Where(p => !string.IsNullOrEmpty(p.Phone)))
             {
                 var isMe  = p.SenderRaw == mySenderRaw;
                 var color = isMe ? "#128c7e" : (senderColorMap.GetValueOrDefault(p.SenderRaw, "#667781"));
-                var phone = string.IsNullOrEmpty(p.Phone) ? "" : $"<span class=\"gp-phone\"> · {H(p.Phone)}</span>";
                 var mark  = isMe ? "●" : "○";
-                infoRows.Append($"<div class=\"gp-item\"><span class=\"gp-mark\">{mark}</span><span class=\"gp-name\" style=\"color:{color}\">{H(p.DisplayName)}</span>{phone}</div>\n");
+                infoRows.Append($"<div class=\"gp-item\"><span class=\"gp-mark\">{mark}</span><span class=\"gp-name\" style=\"color:{color}\">{H(p.DisplayName)}</span><span class=\"gp-sep\"> · </span><span class=\"gp-phone\">{H(p.Phone)}</span></div>\n");
             }
+            var infoSection = infoRows.Length == 0 ? "" : $"""
+                <div class="group-info">
+                  <div class="group-info-inner">
+                    <div class="p-label" style="margin-bottom:6px">İŞTİRAKÇILAR</div>
+                    <div class="gp-list">{infoRows}</div>
+                  </div>
+                </div>
+                """;
+
             participantsBar = $"""
                 <div class="participants-bar">
                   <div class="participants-inner">
-                    <div class="participant left" style="flex:2">
+                    <div class="participant left">
                       <div class="p-label">QRUPUN ADI</div>
                       <div class="p-name">{H(chat.ChatName)}</div>
                     </div>
-                    <div class="participant right">
+                    <div class="participant center">
                       <div class="p-label">TARİX ARALIĞI</div>
                       <div class="p-name">{H(dateRangeStr)}</div>
                     </div>
-                  </div>
-                  <div class="group-info">
-                    <div class="group-info-inner">
-                      <div class="p-label" style="margin-bottom:6px">İŞTİRAKÇILAR</div>
-                      <div class="gp-list">{infoRows}</div>
+                    <div class="participant right">
+                      <div class="p-label">BİRİNCİ TƏRƏF</div>
+                      <div class="p-name">{H(myLabel)}</div>
+                      {myPhoneRow}
                     </div>
                   </div>
+                  {infoSection}
                 </div>
                 """;
         }
@@ -212,10 +224,11 @@ public static class HTMLGenerator
             .doc-ext  { font-size: 11px; color: #8696a0; margin-top: 2px; text-transform: uppercase; }
             .group-info { border-top: 1px solid #e9edef; padding: 10px 0; }
             .group-info-inner { max-width: 780px; margin: 0 auto; padding: 0 18px; }
-            .gp-list { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 4px; }
+            .gp-list { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
             .gp-item { display: flex; align-items: center; gap: 5px; font-size: 13px; }
-            .gp-mark { font-size: 9px; color: #8696a0; }
+            .gp-mark { font-size: 9px; color: #8696a0; flex-shrink: 0; }
             .gp-name { font-weight: 500; }
+            .gp-sep  { color: #8696a0; }
             .gp-phone { font-size: 12px; color: #8696a0; }
             .sender-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
             .vcf-card { background: rgba(0,0,0,.04); border-radius: 8px; padding: 10px 12px; margin: 2px 0; min-width: 200px; display: table; }
