@@ -197,26 +197,39 @@ public class ChatProcessor : INotifyPropertyChanged
         IsProcessing = false;
     }
 
+    private static readonly HashSet<string> AudioExtensions =
+        ["mp3", "m4a", "aac", "opus", "ogg", "wav", "flac"];
+
     public async Task TranscribeAudioAsync()
     {
         if (_extractedDir is null || _parsedChat is null) return;
 
+        // Collect from parsed messages
         var audioFiles = _parsedChat.Messages
             .Where(m => m.Content is MessageContent.Media { Type: MediaType.Audio })
             .Select(m => ((MessageContent.Media)m.Content).Filename)
-            .Distinct()
-            .ToList();
+            .ToHashSet();
+
+        // Also scan directory directly (catches formats the parser may have missed)
+        foreach (var file in Directory.GetFiles(_extractedDir))
+        {
+            var ext = Path.GetExtension(file).TrimStart('.').ToLowerInvariant();
+            if (AudioExtensions.Contains(ext))
+                audioFiles.Add(Path.GetFileName(file));
+        }
 
         if (audioFiles.Count == 0) { Status = "Transkript ediləcək audio tapılmadı."; return; }
+
+        var audioList = audioFiles.ToList();
 
         IsProcessing = true;
         ErrorMessage = null;
         var done = 0;
 
-        foreach (var filename in audioFiles)
+        foreach (var filename in audioList)
         {
-            Status = $"Transkript edilir… {done + 1}/{audioFiles.Count}";
-            Progress = (double)done / audioFiles.Count;
+            Status = $"Transkript edilir… {done + 1}/{audioList.Count}";
+            Progress = (double)done / audioList.Count;
 
             var path = Path.Combine(_extractedDir, filename);
             if (File.Exists(path))
@@ -228,11 +241,11 @@ public class ChatProcessor : INotifyPropertyChanged
                 }
                 catch { }
             }
-            Progress = (double)++done / audioFiles.Count;
+            Progress = (double)++done / audioList.Count;
         }
 
         IsProcessing = false;
-        Status = $"✓ {_transcriptions.Count}/{audioFiles.Count} audio transkript edildi.";
+        Status = $"✓ {_transcriptions.Count}/{audioList.Count} audio transkript edildi.";
         RegeneratePreview();
     }
 
