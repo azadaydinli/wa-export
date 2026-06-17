@@ -115,7 +115,7 @@ public sealed partial class MainWindow : Window
 
             var grid = new Grid { ColumnSpacing = 8 };
             grid.Padding = new Thickness(14, 8, 14, 8);
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(46) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
 

@@ -169,8 +169,8 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="140"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="BİRİNCİ&#x0A;TƏRƏF"
-                                   FontSize="9" FontWeight="SemiBold" TextAlignment="Center" Width="30"
+                        <TextBlock Grid.Column="0" Text="MƏN"
+                                   FontSize="9" FontWeight="SemiBold" TextAlignment="Center" Width="46"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         <TextBlock Grid.Column="1" Text="TƏRƏFİN ADI"
                                    FontSize="9" FontWeight="SemiBold"
