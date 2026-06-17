@@ -88,10 +88,9 @@ public sealed partial class MainWindow : Window
     private void UpdateChatVisibility()
     {
         var vis = _proc.HasChat ? Visibility.Visible : Visibility.Collapsed;
-        ChatInfoCard.Visibility  = vis;
-        PartiesCard.Visibility   = vis;
-        TranscriptCard.Visibility = vis;
-        ActionRow.Visibility     = vis;
+        ChatInfoCard.Visibility = vis;
+        PartiesCard.Visibility  = vis;
+        ActionRow.Visibility    = vis;
     }
 
     private void UpdateChatInfo()
@@ -174,42 +173,6 @@ public sealed partial class MainWindow : Window
         if (_proc.PreviewHtmlPath is not { } path) return;
         var preview = new PreviewWindow(path);
         preview.Activate();
-    }
-
-    // MARK: - Transcription
-
-    private void ApiKeyBox_PasswordChanged(object sender, RoutedEventArgs e)
-    {
-        _proc.WhisperApiKey = ApiKeyBox.Password;
-        TranscribeButton.IsEnabled = _proc.CanTranscribe;
-    }
-
-    private async void TranscribeButton_Click(object sender, RoutedEventArgs e)
-    {
-        TranscribeButton.IsEnabled = false;
-        await _proc.TranscribeAudioAsync();
-        TranscribeButton.IsEnabled = _proc.CanTranscribe;
-
-        var count = _proc.Transcriptions.Count;
-        var dialog = new ContentDialog
-        {
-            Title             = count > 0 ? "Transkript tamamlandı" : "Audio tapılmadı",
-            Content           = count > 0
-                                    ? $"{count} audio mesaj mətə çevrildi. Baxış və ya ixracda görünəcək."
-                                    : _proc.Status,
-            PrimaryButtonText = count > 0 ? "Baxış keçir" : null,
-            CloseButtonText   = "Bağla",
-            XamlRoot          = Content.XamlRoot
-        };
-
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-        {
-            if (_proc.PreviewHtmlPath is { } path)
-            {
-                var preview = new PreviewWindow(path);
-                preview.Activate();
-            }
-        }
     }
 
     // MARK: - Date range toggle

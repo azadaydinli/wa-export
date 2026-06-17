@@ -34,20 +34,6 @@ public class ChatProcessor : INotifyPropertyChanged
     private bool _isWhatsAppBusiness;
     public bool IsWhatsAppBusiness { get => _isWhatsAppBusiness; private set { _isWhatsAppBusiness = value; Notify(); } }
 
-    // MARK: - Transcription
-
-    private readonly Dictionary<string, string> _transcriptions = new();
-    public IReadOnlyDictionary<string, string> Transcriptions => _transcriptions;
-
-    private string _whisperApiKey = "";
-    public string WhisperApiKey
-    {
-        get => _whisperApiKey;
-        set { _whisperApiKey = value; Notify(); Notify(nameof(CanTranscribe)); }
-    }
-
-    public bool CanTranscribe => !string.IsNullOrWhiteSpace(_whisperApiKey) && HasChat && !IsProcessing;
-
     // MARK: - Identity
 
     private string _mySenderRaw = "";
@@ -132,7 +118,6 @@ public class ChatProcessor : INotifyPropertyChanged
         ErrorMessage = null;
         PreviewHtmlPath = null;
         Status = "ZIP açılır…";
-        _transcriptions.Clear();
 
         try
         {
@@ -204,68 +189,6 @@ public class ChatProcessor : INotifyPropertyChanged
         IsProcessing = false;
     }
 
-    private static readonly HashSet<string> AudioExtensions = ["opus"];
-
-    public async Task TranscribeAudioAsync()
-    {
-        if (_extractedDir is null || _parsedChat is null) return;
-
-        // Collect from parsed messages
-        var audioFiles = _parsedChat.Messages
-            .Where(m => m.Content is MessageContent.Media { Type: MediaType.Audio })
-            .Select(m => ((MessageContent.Media)m.Content).Filename)
-            .ToHashSet();
-
-        // Also scan directory directly (catches formats the parser may have missed)
-        foreach (var file in Directory.GetFiles(_extractedDir))
-        {
-            var ext = Path.GetExtension(file).TrimStart('.').ToLowerInvariant();
-            if (AudioExtensions.Contains(ext))
-                audioFiles.Add(Path.GetFileName(file));
-        }
-
-        var audioList = audioFiles.ToList();
-
-        if (audioList.Count == 0)
-        {
-            var parsedAudio = _parsedChat.Messages.Count(m => m.Content is MessageContent.Media { Type: MediaType.Audio });
-            var dirOpus = Directory.GetFiles(_extractedDir).Count(f => Path.GetExtension(f).Equals(".opus", StringComparison.OrdinalIgnoreCase));
-            Status = $"Audio tapılmadı. (parser: {parsedAudio}, qovluqda opus: {dirOpus})";
-            return;
-        }
-
-        IsProcessing = true;
-        ErrorMessage = null;
-        var done = 0;
-
-        foreach (var filename in audioList)
-        {
-            Status = $"Transkript edilir… {done + 1}/{audioList.Count}";
-            Progress = (double)done / audioList.Count;
-
-            var path = Path.Combine(_extractedDir, filename);
-            if (File.Exists(path))
-            {
-                try
-                {
-                    var text = await TranscriptionService.TranscribeAsync(path, _whisperApiKey);
-                    if (text is not null) _transcriptions[filename] = text;
-                }
-                catch (Exception ex)
-                {
-                    IsProcessing = false;
-                    Status = $"Xəta: {ex.Message}";
-                    return;
-                }
-            }
-            Progress = (double)++done / audioList.Count;
-        }
-
-        IsProcessing = false;
-        Status = $"✓ {_transcriptions.Count}/{audioList.Count} audio transkript edildi.";
-        RegeneratePreview();
-    }
-
     public void RegeneratePreview()
     {
         if (FilteredChat is { } chat && _extractedDir is not null)
@@ -277,7 +200,7 @@ public class ChatProcessor : INotifyPropertyChanged
         var html = HTMLGenerator.Generate(
             chat, MySenderRaw, MyDisplayName, MyPhone,
             OtherDisplayName, OtherPhone, IsWhatsAppBusiness,
-            mediaBasePath: "", mediaDir: dir, transcriptions: _transcriptions);
+            mediaBasePath: "", mediaDir: dir);
 
         var path = Path.Combine(dir, "_preview.html");
         File.WriteAllText(path, html, System.Text.Encoding.UTF8);
@@ -327,8 +250,7 @@ public class ChatProcessor : INotifyPropertyChanged
                 }
 
                 var html     = HTMLGenerator.Generate(chat, MySenderRaw, MyDisplayName, MyPhone,
-                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir,
-                    transcriptions: _transcriptions);
+                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir);
                 var htmlPath = Path.Combine(outputDir, "WhatsApp.html");
                 File.WriteAllText(htmlPath, html, System.Text.Encoding.UTF8);
 
