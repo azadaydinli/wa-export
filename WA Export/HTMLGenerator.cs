@@ -158,7 +158,7 @@ public static class HTMLGenerator
             .call-info-text { display: flex; flex-direction: column; }
             .call-title { font-weight: 700; font-size: 14px; color: #111b21; }
             .call-sub   { font-size: 12px; color: #667781; margin-top: 2px; }
-@page { margin: 0.8cm 0.8cm 0.8cm 2cm; }
+            @page { margin: 0.8cm 0.8cm 0.8cm 2cm; }
             @media print {
               *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
               body { background: #e5ddd5 !important; }
