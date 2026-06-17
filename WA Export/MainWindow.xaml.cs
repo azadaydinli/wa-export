@@ -376,7 +376,7 @@ public sealed partial class MainWindow : Window
         try
         {
             _updateManager = new UpdateManager(
-                new GithubSource("https://github.com/azadaydinli/wa-export", null, true));
+                new GithubSource("https://github.com/azadaydinli/wa-export", null, false));
             var update = await _updateManager.CheckForUpdatesAsync();
             if (update is null) return;
 

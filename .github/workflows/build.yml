@@ -67,21 +67,10 @@ jobs:
         run: |
           $setup = Get-ChildItem releases -Filter "*Setup*" | Select-Object -First 1
           Copy-Item $setup.FullName "releases/waexport_setup.exe"
-          gh release create "${{ steps.ver.outputs.tag }}" `
-            "releases/waexport_setup.exe" `
+          $nupkgs = Get-ChildItem releases -Filter "*.nupkg" | ForEach-Object { $_.FullName }
+          $files = @("releases/waexport_setup.exe", "releases/RELEASES", "releases/releases.win.json") + $nupkgs
+          gh release create "${{ steps.ver.outputs.tag }}" @files `
             --title "${{ steps.ver.outputs.tag }}" `
             --notes "WA Export ${{ steps.ver.outputs.tag }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Update the update channel
-        run: |
-          gh release delete "update-channel" --yes --cleanup-tag 2>$null; $true
-          $nupkgs = Get-ChildItem releases -Filter "*.nupkg" | ForEach-Object { $_.FullName }
-          $files = @("releases/RELEASES", "releases/releases.win.json") + $nupkgs
-          gh release create "update-channel" @files `
-            --prerelease `
-            --title "Update Channel" `
-            --notes "Internal update channel. Do not download manually."
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
