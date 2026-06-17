@@ -1,10 +1,5 @@
 # WA Export
 
-<p>
-  <a href="README (az).md">🇦🇿 Azərbaycan</a> &nbsp;·&nbsp;
-  <a href="README (ru).md">🇷🇺 Русский</a>
-</p>
-
 [![Downloads](https://img.shields.io/github/downloads/azadaydinli/wa-export/total?style=flat&label=downloads&color=brightgreen)](https://github.com/azadaydinli/wa-export/releases)
 [![Latest](https://img.shields.io/github/downloads/azadaydinli/wa-export/latest/total?style=flat&label=downloads%2Flatest&color=brightgreen)](https://github.com/azadaydinli/wa-export/releases/latest)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/azadaydinli)
