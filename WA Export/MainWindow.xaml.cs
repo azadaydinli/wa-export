@@ -188,11 +188,11 @@ public sealed partial class MainWindow : Window
         var count = _proc.Transcriptions.Count;
         var dialog = new ContentDialog
         {
-            Title             = "Transkript tamamlandı",
+            Title             = count > 0 ? "Transkript tamamlandı" : "Audio tapılmadı",
             Content           = count > 0
                                     ? $"{count} audio mesaj mətə çevrildi. Baxış və ya ixracda görünəcək."
-                                    : "Transkript ediləcək audio tapılmadı.",
-            PrimaryButtonText = "Baxış keçir",
+                                    : _proc.Status,
+            PrimaryButtonText = count > 0 ? "Baxış keçir" : null,
             CloseButtonText   = "Bağla",
             XamlRoot          = Content.XamlRoot
         };
