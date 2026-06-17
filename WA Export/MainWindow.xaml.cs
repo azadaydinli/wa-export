@@ -3,8 +3,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Velopack;
-using Velopack.Sources;
+using System.Text.Json;
 using Windows.Graphics;
 using Windows.Storage.Pickers;
 using Windows.UI;
@@ -16,7 +15,6 @@ public sealed partial class MainWindow : Window
 {
     private readonly ChatProcessor _proc = new();
     private bool _suppressDateEvents;
-    private UpdateManager? _updateManager;
 
     public MainWindow()
     {
@@ -375,46 +373,47 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            _updateManager = new UpdateManager(
-                new GithubSource("https://github.com/azadaydinli/wa-export", null, true));
-            var update = await _updateManager.CheckForUpdatesAsync();
-            if (update is null) return;
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("User-Agent", "WAExport");
+            http.Timeout = TimeSpan.FromSeconds(10);
+
+            var json = await http.GetStringAsync(
+                "https://api.github.com/repos/azadaydinli/wa-export/releases/latest");
+
+            using var doc = JsonDocument.Parse(json);
+            var root    = doc.RootElement;
+            var tag     = root.GetProperty("tag_name").GetString() ?? "";
+            var latestStr  = tag.TrimStart('v');
+            var currentStr = GetAppVersion().TrimStart('v');
+
+            if (!Version.TryParse(latestStr,  out var latest)  ||
+                !Version.TryParse(currentStr, out var current) ||
+                latest <= current) return;
+
+            var downloadUrl = "";
+            foreach (var asset in root.GetProperty("assets").EnumerateArray())
+            {
+                var name = asset.GetProperty("name").GetString() ?? "";
+                if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    downloadUrl = asset.GetProperty("browser_download_url").GetString() ?? "";
+                    break;
+                }
+            }
 
             var confirm = new ContentDialog
             {
-                Title          = "Yeni versiya mövcuddur",
-                Content        = $"Versiya {update.TargetFullRelease.Version} mövcuddur. İndi yeniləmək istəyirsiniz?",
-                PrimaryButtonText = "Yenilə",
+                Title             = "Yeni versiya mövcuddur",
+                Content           = $"Versiya {latestStr} mövcuddur. İndi yükləmək istəyirsiniz?",
+                PrimaryButtonText = "Yüklə",
                 CloseButtonText   = "Sonra",
-                XamlRoot       = Content.XamlRoot
+                XamlRoot          = Content.XamlRoot
             };
 
             if (await confirm.ShowAsync() != ContentDialogResult.Primary) return;
 
-            var progressBar = new ProgressBar { Minimum = 0, Maximum = 100, Width = 320 };
-            var statusText  = new TextBlock   { Text = "Yüklənir… 0%", Margin = new Microsoft.UI.Xaml.Thickness(0, 8, 0, 0) };
-            var panel = new StackPanel { Spacing = 4 };
-            panel.Children.Add(progressBar);
-            panel.Children.Add(statusText);
-
-            var progressDialog = new ContentDialog
-            {
-                Title   = "Yenilənir",
-                Content = panel,
-                XamlRoot = Content.XamlRoot
-            };
-
-            _ = progressDialog.ShowAsync();
-
-            await _updateManager.DownloadUpdatesAsync(update, p =>
-                DispatcherQueue.TryEnqueue(() =>
-                {
-                    progressBar.Value = p;
-                    statusText.Text   = $"Yüklənir… {p}%";
-                }));
-
-            progressDialog.Hide();
-            _updateManager.ApplyUpdatesAndRestart(update);
+            if (!string.IsNullOrEmpty(downloadUrl))
+                await Windows.System.Launcher.LaunchUriAsync(new Uri(downloadUrl));
         }
         catch { }
     }
