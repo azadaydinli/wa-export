@@ -36,6 +36,7 @@ public sealed partial class MainWindow : Window
         appWindow.Resize(new SizeInt32((int)(560 * scale), (int)(600 * scale)));
         appWindow.Title = "WA Export";
         appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "app.ico"));
+        VersionText.Text = GetAppVersion();
     }
 
     // MARK: - Processor binding
@@ -212,6 +213,22 @@ public sealed partial class MainWindow : Window
     // MARK: - Swap
 
     private void SwapButton_Click(object sender, RoutedEventArgs e) => _proc.SwapSides();
+
+    private static string GetAppVersion()
+    {
+        try
+        {
+            var path = Environment.ProcessPath;
+            if (path is not null)
+            {
+                var pv = System.Diagnostics.FileVersionInfo.GetVersionInfo(path).ProductVersion;
+                if (!string.IsNullOrWhiteSpace(pv))
+                    return $"v{pv.Split('+')[0]}";
+            }
+        }
+        catch { }
+        return "";
+    }
 
     // MARK: - Auto-update
 

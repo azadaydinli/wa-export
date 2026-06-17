@@ -230,6 +230,10 @@
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
                 <TextBlock Text="azad.aydinli@gmail.com" Style="{StaticResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBlock Text="·" Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
+                <TextBlock x:Name="VersionText" Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"/>
             </StackPanel>
         </Border>
     </Grid>
