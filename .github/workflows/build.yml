@@ -1,4 +1,4 @@
-name: Build
+name: Build & Release
 
 on:
   push:
@@ -20,37 +20,35 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Add Windows App SDK NuGet source
-        run: |
-          dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org 2>$null || true
-
       - name: Restore dependencies
         run: dotnet restore "WA Export/WA Export.csproj"
 
-      - name: Publish self-contained exe
+      - name: Publish
         run: |
           dotnet publish "WA Export/WA Export.csproj" `
             -c Release `
             -r win-x64 `
             --self-contained true `
-            -p:PublishSingleFile=true `
-            -p:IncludeNativeLibrariesForSelfExtract=true `
             -o publish
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: WA-Export-Windows
-          path: publish/WA Export.exe
-          retention-days: 30
+      - name: Install vpk
+        run: dotnet tool install -g vpk
 
-      - name: Create Release
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: build-${{ github.run_number }}
-          name: "Build #${{ github.run_number }}"
-          files: publish/WA Export.exe
-          generate_release_notes: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Package with Velopack
+        run: |
+          vpk pack `
+            --packId "WAExport" `
+            --packVersion "1.0.${{ github.run_number }}" `
+            --packDir publish `
+            --mainExe "WA Export.exe" `
+            --packTitle "WA Export" `
+            --outputDir releases
+
+      - name: Upload to GitHub Releases
+        run: |
+          vpk upload github `
+            --repoUrl "https://github.com/azadaydinli/wa-export-windows" `
+            --publish `
+            --releaseName "v1.0.${{ github.run_number }}" `
+            --tag "v1.0.${{ github.run_number }}" `
+            --token "${{ secrets.GITHUB_TOKEN }}"

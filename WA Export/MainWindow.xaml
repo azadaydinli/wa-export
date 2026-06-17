@@ -13,6 +13,18 @@
         <!-- Main content -->
         <StackPanel Grid.Row="0" Spacing="10" Padding="18,18,18,8" VerticalAlignment="Top">
 
+            <!-- Update notification -->
+            <InfoBar x:Name="UpdateInfoBar"
+                     IsOpen="False"
+                     IsClosable="False"
+                     Severity="Informational"
+                     Title="Yeni versiya mövcuddur">
+                <InfoBar.ActionButton>
+                    <Button x:Name="UpdateButton" Content="Yenilə və yenidən başlat"
+                            Click="UpdateButton_Click"/>
+                </InfoBar.ActionButton>
+            </InfoBar>
+
             <!-- Import card -->
             <Border x:Name="ImportCard" CornerRadius="10" Padding="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"

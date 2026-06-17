@@ -2,6 +2,8 @@ using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Velopack;
+using Velopack.Sources;
 using Windows.Graphics;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
@@ -12,12 +14,15 @@ public sealed partial class MainWindow : Window
 {
     private readonly ChatProcessor _proc = new();
     private bool _suppressDateEvents;
+    private UpdateManager? _updateManager;
+    private UpdateInfo? _pendingUpdate;
 
     public MainWindow()
     {
         InitializeComponent();
         ConfigureWindow();
         SubscribeToProcessor();
+        _ = CheckForUpdatesAsync();
     }
 
     // MARK: - Window setup
@@ -212,4 +217,41 @@ public sealed partial class MainWindow : Window
     // MARK: - Swap
 
     private void SwapButton_Click(object sender, RoutedEventArgs e) => _proc.SwapSides();
+
+    // MARK: - Auto-update
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            _updateManager = new UpdateManager(
+                new GithubSource("https://github.com/azadaydinli/wa-export-windows", null, false));
+            _pendingUpdate = await _updateManager.CheckForUpdatesAsync();
+            if (_pendingUpdate is not null)
+                UpdateInfoBar.IsOpen = true;
+        }
+        catch { /* Offline və ya xəta — laqeyd keç */ }
+    }
+
+    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_updateManager is null || _pendingUpdate is null) return;
+
+        UpdateButton.IsEnabled = false;
+        UpdateButton.Content   = "Yüklənir…";
+
+        try
+        {
+            await _updateManager.DownloadUpdatesAsync(_pendingUpdate, p =>
+                DispatcherQueue.TryEnqueue(() =>
+                    UpdateButton.Content = $"Yüklənir… {p}%"));
+
+            _updateManager.ApplyUpdatesAndRestart(_pendingUpdate);
+        }
+        catch
+        {
+            UpdateButton.IsEnabled = true;
+            UpdateButton.Content   = "Yenilə və yenidən başlat";
+        }
+    }
 }
