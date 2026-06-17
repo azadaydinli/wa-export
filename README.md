@@ -1,8 +1,10 @@
-# WA Export
+<h1 align="center">WA Export</h1>
 
-[![Downloads](https://img.shields.io/github/downloads/azadaydinli/wa-export/total?style=flat&label=downloads&color=brightgreen)](https://github.com/azadaydinli/wa-export/releases)
-[![Latest](https://img.shields.io/github/downloads/azadaydinli/wa-export/latest/total?style=flat&label=downloads%2Flatest&color=brightgreen)](https://github.com/azadaydinli/wa-export/releases/latest)
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?style=flat&logo=ko-fi&logoColor=white)](https://ko-fi.com/azadaydinli)
+<p align="center">
+  <a href="https://github.com/azadaydinli/wa-export/releases"><img src="https://img.shields.io/github/downloads/azadaydinli/wa-export/total?style=flat&label=downloads&color=brightgreen" alt="Downloads"/></a>
+  <a href="https://github.com/azadaydinli/wa-export/releases/latest"><img src="https://img.shields.io/github/downloads/azadaydinli/wa-export/latest/total?style=flat&label=downloads%2Flatest&color=brightgreen" alt="Latest"/></a>
+  <a href="https://ko-fi.com/azadaydinli"><img src="https://img.shields.io/badge/Ko--fi-support-FF5E5B?style=flat&logo=ko-fi&logoColor=white" alt="Ko-fi"/></a>
+</p>
 
 A Windows desktop app that converts WhatsApp exported ZIP files into a clean, readable HTML format.
 
