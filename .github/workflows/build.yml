@@ -77,8 +77,9 @@ jobs:
       - name: Create user-facing release
         run: |
           $setup = Get-ChildItem releases -Filter "*Setup*" | Select-Object -First 1
+          Copy-Item $setup.FullName "releases/waexport_setup.exe"
           gh release create "${{ steps.ver.outputs.tag }}" `
-            "$($setup.FullName)#waexport_setup.exe" `
+            "releases/waexport_setup.exe" `
             --title "${{ steps.ver.outputs.tag }}" `
             --notes "WA Export ${{ steps.ver.outputs.tag }}"
         env:
