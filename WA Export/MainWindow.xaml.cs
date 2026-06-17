@@ -184,6 +184,27 @@ public sealed partial class MainWindow : Window
         TranscribeButton.IsEnabled = false;
         await _proc.TranscribeAudioAsync();
         TranscribeButton.IsEnabled = _proc.CanTranscribe;
+
+        var count = _proc.Transcriptions.Count;
+        var dialog = new ContentDialog
+        {
+            Title             = "Transkript tamamlandı",
+            Content           = count > 0
+                                    ? $"{count} audio mesaj mətə çevrildi. Baxış və ya ixracda görünəcək."
+                                    : "Transkript ediləcək audio tapılmadı.",
+            PrimaryButtonText = "Baxış keçir",
+            CloseButtonText   = "Bağla",
+            XamlRoot          = Content.XamlRoot
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (_proc.PreviewHtmlPath is { } path)
+            {
+                var preview = new PreviewWindow(path);
+                preview.Activate();
+            }
+        }
     }
 
     // MARK: - Date range toggle
