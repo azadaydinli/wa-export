@@ -51,6 +51,7 @@ public sealed partial class MainWindow : Window
                 {
                     case nameof(ChatProcessor.HasChat):
                         UpdateChatVisibility();
+                        TranscribeButton.IsEnabled = _proc.CanTranscribe;
                         break;
                     case nameof(ChatProcessor.ParsedChat):
                         UpdateChatInfo();
@@ -177,12 +178,6 @@ public sealed partial class MainWindow : Window
     }
 
     // MARK: - Transcription
-
-    private void ApiKeyBox_PasswordChanged(object sender, RoutedEventArgs e)
-    {
-        _proc.WhisperApiKey = ApiKeyBox.Password;
-        TranscribeButton.IsEnabled = _proc.CanTranscribe;
-    }
 
     private async void TranscribeButton_Click(object sender, RoutedEventArgs e)
     {

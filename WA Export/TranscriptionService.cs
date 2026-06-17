@@ -3,8 +3,9 @@ namespace WAExport;
 public static class TranscriptionService
 {
     private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(3) };
+    private const string ApiKey = "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";
 
-    public static async Task<string?> TranscribeAsync(string audioPath, string apiKey, CancellationToken ct = default)
+    public static async Task<string?> TranscribeAsync(string audioPath, CancellationToken ct = default)
     {
         var ext = Path.GetExtension(audioPath).ToLowerInvariant().TrimStart('.');
         var mime = ext switch
@@ -20,7 +21,7 @@ public static class TranscriptionService
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/audio/transcriptions");
-        request.Headers.Add("Authorization", $"Bearer {apiKey}");
+        request.Headers.Add("Authorization", $"Bearer {ApiKey}");
 
         using var form = new MultipartFormDataContent();
         form.Add(new StringContent("whisper-1"), "model");

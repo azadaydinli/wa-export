@@ -39,14 +39,7 @@ public class ChatProcessor : INotifyPropertyChanged
     private readonly Dictionary<string, string> _transcriptions = new();
     public IReadOnlyDictionary<string, string> Transcriptions => _transcriptions;
 
-    private string _whisperApiKey = "";
-    public string WhisperApiKey
-    {
-        get => _whisperApiKey;
-        set { _whisperApiKey = value; Notify(); Notify(nameof(CanTranscribe)); }
-    }
-
-    public bool CanTranscribe => !string.IsNullOrWhiteSpace(_whisperApiKey) && HasChat && !IsProcessing;
+    public bool CanTranscribe => HasChat && !IsProcessing;
 
     // MARK: - Identity
 
@@ -230,7 +223,7 @@ public class ChatProcessor : INotifyPropertyChanged
             {
                 try
                 {
-                    var text = await TranscriptionService.TranscribeAsync(path, _whisperApiKey);
+                    var text = await TranscriptionService.TranscribeAsync(path);
                     if (text is not null) _transcriptions[filename] = text;
                 }
                 catch { }

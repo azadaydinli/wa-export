@@ -162,9 +162,12 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <PasswordBox x:Name="ApiKeyBox" Grid.Column="0"
-                                 PlaceholderText="OpenAI API açarı (sk-…)"
-                                 PasswordChanged="ApiKeyBox_PasswordChanged"/>
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Audio transkripti" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                        <TextBlock Text="Audio mesajları mətə çevirir (OpenAI Whisper)"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
                     <Button x:Name="TranscribeButton" Grid.Column="1"
                             Content="Transkript et" IsEnabled="False"
                             Click="TranscribeButton_Click"/>
