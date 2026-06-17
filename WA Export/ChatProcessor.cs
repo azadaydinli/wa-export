@@ -217,9 +217,15 @@ public class ChatProcessor : INotifyPropertyChanged
                 audioFiles.Add(Path.GetFileName(file));
         }
 
-        if (audioFiles.Count == 0) { Status = "Transkript ediləcək audio tapılmadı."; return; }
-
         var audioList = audioFiles.ToList();
+
+        if (audioList.Count == 0)
+        {
+            var parsedAudio = _parsedChat.Messages.Count(m => m.Content is MessageContent.Media { Type: MediaType.Audio });
+            var dirOpus = Directory.GetFiles(_extractedDir).Count(f => Path.GetExtension(f).Equals(".opus", StringComparison.OrdinalIgnoreCase));
+            Status = $"Audio tapılmadı. (parser: {parsedAudio}, qovluqda opus: {dirOpus})";
+            return;
+        }
 
         IsProcessing = true;
         ErrorMessage = null;
