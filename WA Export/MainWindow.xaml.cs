@@ -36,12 +36,6 @@ public sealed partial class MainWindow : Window
         var scale = Content.XamlRoot?.RasterizationScale ?? 1.0;
         appWindow.Resize(new SizeInt32((int)(560 * scale), (int)(600 * scale)));
         appWindow.Title = "WA Export";
-
-        if (appWindow.Presenter is OverlappedPresenter presenter)
-        {
-            presenter.IsResizable    = false;
-            presenter.IsMaximizable  = false;
-        }
     }
 
     // MARK: - Processor binding

@@ -11,7 +11,8 @@
         </Grid.RowDefinitions>
 
         <!-- Main content -->
-        <StackPanel Grid.Row="0" Spacing="10" Padding="18,18,18,8" VerticalAlignment="Top">
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="10" Padding="18,18,18,8" VerticalAlignment="Top">
 
             <!-- Update notification -->
             <InfoBar x:Name="UpdateInfoBar"
@@ -229,6 +230,7 @@
             </StackPanel>
 
         </StackPanel>
+        </ScrollViewer>
 
         <!-- Footer -->
         <Border Grid.Row="1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
