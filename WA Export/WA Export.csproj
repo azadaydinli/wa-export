@@ -12,6 +12,8 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsSdkPackageVersion>10.0.26100.57</WindowsSdkPackageVersion>
     <DefineConstants>DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
