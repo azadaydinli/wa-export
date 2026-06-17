@@ -44,21 +44,23 @@ jobs:
             --packTitle "WA Export" `
             --outputDir releases
 
-      - name: Upload update files to update channel
+      - name: Update the update channel
         run: |
-          vpk upload github `
-            --repoUrl "https://github.com/azadaydinli/wa-export-updates" `
-            --publish `
-            --releaseName "v1.0.${{ github.run_number }}" `
-            --tag "v1.0.${{ github.run_number }}" `
-            --token "${{ secrets.RELEASES_PAT }}"
+          gh release delete "update-channel" --yes --cleanup-tag 2>$null; $true
+          $nupkgs = Get-ChildItem releases -Filter "*.nupkg" | ForEach-Object { $_.FullName }
+          $files = @("releases/RELEASES", "releases/releases.win.json") + $nupkgs
+          gh release create "update-channel" @files `
+            --prerelease `
+            --title "Update Channel" `
+            --notes "Internal update channel. Do not download manually."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create user-facing release
         run: |
           $setup = Get-ChildItem releases -Filter "*Setup*" | Select-Object -First 1
           gh release create "v1.0.${{ github.run_number }}" `
             "$($setup.FullName)#WAExport-win-Setup.exe" `
-            --repo "azadaydinli/wa-export-windows" `
             --title "v1.0.${{ github.run_number }}" `
             --notes "WA Export v1.0.${{ github.run_number }}"
         env:
