@@ -41,7 +41,7 @@ public class ChatProcessor : INotifyPropertyChanged
     // MARK: - Identity
 
     private string _mySenderRaw = "";
-    public string MySenderRaw { get => _mySenderRaw; private set { _mySenderRaw = value; Notify(); } }
+    public string MySenderRaw { get => _mySenderRaw; set { _mySenderRaw = value; Notify(); } }
 
     private string _myDisplayName = "";
     public string MyDisplayName { get => _myDisplayName; set { _myDisplayName = value; Notify(); } }

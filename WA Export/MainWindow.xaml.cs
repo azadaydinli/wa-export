@@ -3,7 +3,6 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Shapes;
 using Velopack;
 using Velopack.Sources;
 using Windows.Graphics;
@@ -166,7 +165,7 @@ public sealed partial class MainWindow : Window
 
             if (p != _proc.Participants.Last())
             {
-                ParticipantsPanel.Children.Add(new Rectangle
+                ParticipantsPanel.Children.Add(new Microsoft.UI.Xaml.Shapes.Rectangle
                 {
                     Height = 1,
                     Margin = new Thickness(10, 0, 10, 0),

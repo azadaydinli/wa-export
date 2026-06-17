@@ -58,7 +58,6 @@ public static class HTMLGenerator
         string participantsBar;
         if (isGroup)
         {
-            var myLabel    = string.IsNullOrEmpty(myDisplayName) ? mySenderRaw : myDisplayName;
             var myPhoneRow = string.IsNullOrEmpty(myPhone) ? "" : $"<div class=\"p-phone\">{H(myPhone)}</div>";
 
             // Info section: only participants with a phone, one per line
