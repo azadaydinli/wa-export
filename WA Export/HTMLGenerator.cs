@@ -5,6 +5,12 @@ namespace WAExport;
 
 public static class HTMLGenerator
 {
+    private static readonly string[] SenderColors = [
+        "#e91e8c", "#e67e22", "#2ecc71", "#3498db",
+        "#9b59b6", "#e74c3c", "#1abc9c", "#f39c12",
+        "#00bcd4", "#795548", "#607d8b", "#ff5722"
+    ];
+
     public static string Generate(
         ParsedChat chat,
         string mySenderRaw,
@@ -13,9 +19,12 @@ public static class HTMLGenerator
         string otherDisplayName,
         string otherPhone,
         bool isWhatsAppBusiness,
+        IEnumerable<(string SenderRaw, string DisplayName, string Phone)>? groupParticipants = null,
         string mediaBasePath = "Media",
         string? mediaDir = null)
     {
+        var gpList   = groupParticipants?.ToList() ?? [];
+        var isGroup  = gpList.Count > 0;
         var dateFmt = "dd.MM.yyyy";
         var timeFmt = "HH:mm";
 
@@ -34,29 +43,76 @@ public static class HTMLGenerator
         var otherLabel = string.IsNullOrEmpty(otherDisplayName) ? chat.ChatName : otherDisplayName;
         var platform   = isWhatsAppBusiness ? "WhatsApp Business" : "WhatsApp";
 
-        var otherPhoneRow = string.IsNullOrEmpty(otherPhone) ? "" : $"<div class=\"p-phone\">{H(otherPhone)}</div>";
-        var myPhoneRow    = string.IsNullOrEmpty(myPhone)    ? "" : $"<div class=\"p-phone\">{H(myPhone)}</div>";
+        // Build sender color map for group chat
+        var senderColorMap = new Dictionary<string, string>();
+        var displayNameMap = new Dictionary<string, string>();
+        if (isGroup)
+        {
+            var others = gpList.Where(p => p.SenderRaw != mySenderRaw).ToList();
+            for (int ci = 0; ci < others.Count; ci++)
+                senderColorMap[others[ci].SenderRaw] = SenderColors[ci % SenderColors.Length];
+            foreach (var p in gpList)
+                displayNameMap[p.SenderRaw] = p.DisplayName;
+        }
 
-        var participantsBar = $"""
-            <div class="participants-bar">
-              <div class="participants-inner">
-                <div class="participant left">
-                  <div class="p-label">DİGƏR TƏRƏF</div>
-                  <div class="p-name">{H(otherLabel)}</div>
-                  {otherPhoneRow}
+        string participantsBar;
+        if (isGroup)
+        {
+            var infoRows = new StringBuilder();
+            foreach (var p in gpList)
+            {
+                var isMe  = p.SenderRaw == mySenderRaw;
+                var color = isMe ? "#128c7e" : (senderColorMap.GetValueOrDefault(p.SenderRaw, "#667781"));
+                var phone = string.IsNullOrEmpty(p.Phone) ? "" : $"<span class=\"gp-phone\"> · {H(p.Phone)}</span>";
+                var mark  = isMe ? "●" : "○";
+                infoRows.Append($"<div class=\"gp-item\"><span class=\"gp-mark\">{mark}</span><span class=\"gp-name\" style=\"color:{color}\">{H(p.DisplayName)}</span>{phone}</div>\n");
+            }
+            participantsBar = $"""
+                <div class="participants-bar">
+                  <div class="participants-inner">
+                    <div class="participant left" style="flex:2">
+                      <div class="p-label">QRUPUN ADI</div>
+                      <div class="p-name">{H(chat.ChatName)}</div>
+                    </div>
+                    <div class="participant right">
+                      <div class="p-label">TARİX ARALIĞI</div>
+                      <div class="p-name">{H(dateRangeStr)}</div>
+                    </div>
+                  </div>
+                  <div class="group-info">
+                    <div class="group-info-inner">
+                      <div class="p-label" style="margin-bottom:6px">İŞTİRAKÇILAR</div>
+                      <div class="gp-list">{infoRows}</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="participant center">
-                  <div class="p-label">TARİX ARALIĞI</div>
-                  <div class="p-name">{H(dateRangeStr)}</div>
+                """;
+        }
+        else
+        {
+            var otherPhoneRow = string.IsNullOrEmpty(otherPhone) ? "" : $"<div class=\"p-phone\">{H(otherPhone)}</div>";
+            var myPhoneRow    = string.IsNullOrEmpty(myPhone)    ? "" : $"<div class=\"p-phone\">{H(myPhone)}</div>";
+            participantsBar = $"""
+                <div class="participants-bar">
+                  <div class="participants-inner">
+                    <div class="participant left">
+                      <div class="p-label">DİGƏR TƏRƏF</div>
+                      <div class="p-name">{H(otherLabel)}</div>
+                      {otherPhoneRow}
+                    </div>
+                    <div class="participant center">
+                      <div class="p-label">TARİX ARALIĞI</div>
+                      <div class="p-name">{H(dateRangeStr)}</div>
+                    </div>
+                    <div class="participant right">
+                      <div class="p-label">BİRİNCİ TƏRƏF</div>
+                      <div class="p-name">{H(myLabel)}</div>
+                      {myPhoneRow}
+                    </div>
+                  </div>
                 </div>
-                <div class="participant right">
-                  <div class="p-label">BİRİNCİ TƏRƏF</div>
-                  <div class="p-name">{H(myLabel)}</div>
-                  {myPhoneRow}
-                </div>
-              </div>
-            </div>
-            """;
+                """;
+        }
 
         var body = new StringBuilder();
         int? lastDay = null;
@@ -95,10 +151,18 @@ public static class HTMLGenerator
             var side = isMe ? "out" : "in";
             var time = msg.Date.ToString(timeFmt);
 
+            var senderNameHtml = "";
+            if (isGroup && !isMe)
+            {
+                var label = displayNameMap.GetValueOrDefault(msg.Sender, msg.Sender);
+                var color = senderColorMap.GetValueOrDefault(msg.Sender, "#667781");
+                senderNameHtml = $"<div class=\"sender-name\" style=\"color:{color}\">{H(label)}</div>\n";
+            }
+
             body.AppendLine($"""
                 <div class="row {side}">
                   <div class="bubble">
-                    {contentHtml}
+                    {senderNameHtml}{contentHtml}
                     <div class="time">{time}</div>
                   </div>
                 </div>
@@ -146,6 +210,14 @@ public static class HTMLGenerator
             .doc-info { display: flex; flex-direction: column; min-width: 0; }
             .doc-name { font-size: 13px; font-weight: 500; color: #111b21; word-break: break-all; }
             .doc-ext  { font-size: 11px; color: #8696a0; margin-top: 2px; text-transform: uppercase; }
+            .group-info { border-top: 1px solid #e9edef; padding: 10px 0; }
+            .group-info-inner { max-width: 780px; margin: 0 auto; padding: 0 18px; }
+            .gp-list { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 4px; }
+            .gp-item { display: flex; align-items: center; gap: 5px; font-size: 13px; }
+            .gp-mark { font-size: 9px; color: #8696a0; }
+            .gp-name { font-weight: 500; }
+            .gp-phone { font-size: 12px; color: #8696a0; }
+            .sender-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
             .vcf-card { background: rgba(0,0,0,.04); border-radius: 8px; padding: 10px 12px; margin: 2px 0; min-width: 200px; display: table; }
             .vcf-row  { display: table-row; }
             .vcf-icon { display: table-cell; font-size: 15px; width: 24px; padding: 2px 8px 2px 0; vertical-align: middle; text-align: center; }
@@ -166,6 +238,7 @@ public static class HTMLGenerator
               header { background: #075e54 !important; color: #fff !important; }
               .participants-bar { background: #fff !important; border-bottom: 1px solid #e9edef !important; }
               .participants-inner { max-width: 100%; }
+              .group-info-inner { max-width: 100%; }
               .container { max-width: 100%; }
               .in  .bubble { background: #fff !important; }
               .out .bubble { background: #d9fdd3 !important; }

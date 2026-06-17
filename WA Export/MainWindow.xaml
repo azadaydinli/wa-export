@@ -152,6 +152,20 @@
                 </StackPanel>
             </Border>
 
+            <!-- Group participants card -->
+            <Border x:Name="GroupParticipantsCard" CornerRadius="10" Padding="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="İŞTİRAKÇILAR" Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               HorizontalAlignment="Center" Margin="0,12,0,8"/>
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="10,0"/>
+                    <StackPanel x:Name="ParticipantsPanel" Margin="0,0,0,4"/>
+                </StackPanel>
+            </Border>
+
             <!-- Date range card -->
             <Border x:Name="DateRangeCard" CornerRadius="10" Padding="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"

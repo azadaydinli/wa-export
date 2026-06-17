@@ -2,10 +2,13 @@ using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Shapes;
 using Velopack;
 using Velopack.Sources;
 using Windows.Graphics;
 using Windows.Storage.Pickers;
+using Windows.UI;
 using WinRT.Interop;
 
 namespace WAExport;
@@ -87,10 +90,92 @@ public sealed partial class MainWindow : Window
 
     private void UpdateChatVisibility()
     {
-        var vis = _proc.HasChat ? Visibility.Visible : Visibility.Collapsed;
-        ChatInfoCard.Visibility = vis;
-        PartiesCard.Visibility  = vis;
-        ActionRow.Visibility    = vis;
+        var vis     = _proc.HasChat ? Visibility.Visible : Visibility.Collapsed;
+        var isGroup = _proc.ParsedChat?.IsGroup == true;
+
+        ChatInfoCard.Visibility          = vis;
+        PartiesCard.Visibility           = (_proc.HasChat && !isGroup) ? Visibility.Visible : Visibility.Collapsed;
+        GroupParticipantsCard.Visibility = (_proc.HasChat && isGroup)  ? Visibility.Visible : Visibility.Collapsed;
+        ActionRow.Visibility             = vis;
+
+        if (_proc.HasChat && isGroup)
+            RebuildParticipantRows();
+    }
+
+    private bool _suppressParticipantEvents;
+
+    private void RebuildParticipantRows()
+    {
+        _suppressParticipantEvents = true;
+        ParticipantsPanel.Children.Clear();
+
+        foreach (var p in _proc.Participants)
+        {
+            var isMe = p.SenderRaw == _proc.MySenderRaw;
+
+            var grid = new Grid { ColumnSpacing = 8 };
+            grid.Padding = new Thickness(14, 8, 14, 8);
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
+
+            var icon = new TextBlock
+            {
+                Text     = isMe ? "●" : "○",
+                FontSize = 15,
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = isMe
+                    ? new SolidColorBrush(Color.FromArgb(255, 18, 128, 110))
+                    : (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"]
+            };
+            var selectBtn = new Button
+            {
+                Content = icon,
+                Tag     = p.SenderRaw,
+                Padding = new Thickness(4),
+                VerticalAlignment = VerticalAlignment.Center,
+                Background = new SolidColorBrush(Colors.Transparent),
+                BorderThickness = new Thickness(0),
+            };
+            selectBtn.Click += SelectMeButton_Click;
+
+            var nameBox = new TextBox
+            {
+                Text            = p.DisplayName,
+                PlaceholderText = p.SenderRaw,
+                Tag             = p.SenderRaw,
+            };
+            nameBox.TextChanged += ParticipantNameBox_TextChanged;
+
+            var phoneBox = new TextBox
+            {
+                Text            = p.Phone,
+                PlaceholderText = "+994 __ ___ __ __",
+                Tag             = p.SenderRaw,
+            };
+            phoneBox.TextChanged += ParticipantPhoneBox_TextChanged;
+
+            Grid.SetColumn(selectBtn, 0);
+            Grid.SetColumn(nameBox,   1);
+            Grid.SetColumn(phoneBox,  2);
+            grid.Children.Add(selectBtn);
+            grid.Children.Add(nameBox);
+            grid.Children.Add(phoneBox);
+
+            ParticipantsPanel.Children.Add(grid);
+
+            if (p != _proc.Participants.Last())
+            {
+                ParticipantsPanel.Children.Add(new Rectangle
+                {
+                    Height = 1,
+                    Margin = new Thickness(10, 0, 10, 0),
+                    Fill   = (Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"]
+                });
+            }
+        }
+
+        _suppressParticipantEvents = false;
     }
 
     private void UpdateChatInfo()
@@ -228,6 +313,46 @@ public sealed partial class MainWindow : Window
     // MARK: - Swap
 
     private void SwapButton_Click(object sender, RoutedEventArgs e) => _proc.SwapSides();
+
+    // MARK: - Group participant handlers
+
+    private void SelectMeButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string senderRaw })
+        {
+            _proc.MySenderRaw = senderRaw;
+            _proc.RegeneratePreview();
+            RebuildParticipantRows();
+        }
+    }
+
+    private void ParticipantNameBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressParticipantEvents) return;
+        if (sender is TextBox { Tag: string senderRaw } box)
+        {
+            var p = _proc.Participants.FirstOrDefault(x => x.SenderRaw == senderRaw);
+            if (p is not null && p.DisplayName != box.Text)
+            {
+                p.DisplayName = box.Text;
+                _proc.RegeneratePreview();
+            }
+        }
+    }
+
+    private void ParticipantPhoneBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressParticipantEvents) return;
+        if (sender is TextBox { Tag: string senderRaw } box)
+        {
+            var p = _proc.Participants.FirstOrDefault(x => x.SenderRaw == senderRaw);
+            if (p is not null && p.Phone != box.Text)
+            {
+                p.Phone = box.Text;
+                _proc.RegeneratePreview();
+            }
+        }
+    }
 
     private static string GetAppVersion()
     {

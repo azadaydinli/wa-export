@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
@@ -33,6 +34,9 @@ public class ChatProcessor : INotifyPropertyChanged
 
     private bool _isWhatsAppBusiness;
     public bool IsWhatsAppBusiness { get => _isWhatsAppBusiness; private set { _isWhatsAppBusiness = value; Notify(); } }
+
+    private ObservableCollection<ParticipantInfo> _participants = [];
+    public ObservableCollection<ParticipantInfo> Participants { get => _participants; private set { _participants = value; Notify(); } }
 
     // MARK: - Identity
 
@@ -143,25 +147,37 @@ public class ChatProcessor : INotifyPropertyChanged
             _extractedDir = tempDir;
             ParsedChat    = chat;
 
-            // Auto-detect sides
-            var contact = chat.Senders.FirstOrDefault(s =>
+            if (chat.IsGroup)
             {
-                var sl = s.ToLowerInvariant();
-                var cl = name.ToLowerInvariant();
-                return sl == cl || sl.Contains(cl) || cl.Contains(sl);
-            });
-
-            if (contact is not null)
-            {
-                OtherDisplayName = contact;
-                MySenderRaw      = chat.Senders.FirstOrDefault(s => s != contact) ?? chat.Senders.LastOrDefault() ?? "";
+                // Group chat: populate participants, user picks "me" via UI
+                Participants = new ObservableCollection<ParticipantInfo>(
+                    chat.Senders.Select(s => new ParticipantInfo { SenderRaw = s, DisplayName = s }));
+                MySenderRaw      = chat.Senders.FirstOrDefault() ?? "";
+                MyDisplayName    = "";
+                OtherDisplayName = "";
             }
             else
             {
-                MySenderRaw      = chat.Senders.LastOrDefault() ?? "";
-                OtherDisplayName = chat.Senders.FirstOrDefault() ?? name;
+                // 1-1 chat: auto-detect sides
+                Participants = [];
+                var contact = chat.Senders.FirstOrDefault(s =>
+                {
+                    var sl = s.ToLowerInvariant();
+                    var cl = name.ToLowerInvariant();
+                    return sl == cl || sl.Contains(cl) || cl.Contains(sl);
+                });
+                if (contact is not null)
+                {
+                    OtherDisplayName = contact;
+                    MySenderRaw      = chat.Senders.FirstOrDefault(s => s != contact) ?? chat.Senders.LastOrDefault() ?? "";
+                }
+                else
+                {
+                    MySenderRaw      = chat.Senders.LastOrDefault() ?? "";
+                    OtherDisplayName = chat.Senders.FirstOrDefault() ?? name;
+                }
+                MyDisplayName = MySenderRaw;
             }
-            MyDisplayName = MySenderRaw;
 
             // Init date range
             var dates = chat.Messages
@@ -189,6 +205,21 @@ public class ChatProcessor : INotifyPropertyChanged
         IsProcessing = false;
     }
 
+    public IEnumerable<(string SenderRaw, string DisplayName, string Phone)> ResolvedGroupParticipants =>
+        _parsedChat?.IsGroup == true
+            ? _participants.Select(p => (p.SenderRaw, string.IsNullOrEmpty(p.DisplayName) ? p.SenderRaw : p.DisplayName, p.Phone))
+            : [];
+
+    public string ResolvedMyDisplayName =>
+        _parsedChat?.IsGroup == true
+            ? (_participants.FirstOrDefault(p => p.SenderRaw == MySenderRaw)?.DisplayName is { Length: > 0 } dn ? dn : MySenderRaw)
+            : MyDisplayName;
+
+    public string ResolvedMyPhone =>
+        _parsedChat?.IsGroup == true
+            ? (_participants.FirstOrDefault(p => p.SenderRaw == MySenderRaw)?.Phone ?? "")
+            : MyPhone;
+
     public void RegeneratePreview()
     {
         if (FilteredChat is { } chat && _extractedDir is not null)
@@ -198,8 +229,9 @@ public class ChatProcessor : INotifyPropertyChanged
     private void GeneratePreviewHtml(ParsedChat chat, string dir)
     {
         var html = HTMLGenerator.Generate(
-            chat, MySenderRaw, MyDisplayName, MyPhone,
+            chat, MySenderRaw, ResolvedMyDisplayName, ResolvedMyPhone,
             OtherDisplayName, OtherPhone, IsWhatsAppBusiness,
+            groupParticipants: ResolvedGroupParticipants,
             mediaBasePath: "", mediaDir: dir);
 
         var path = Path.Combine(dir, "_preview.html");
@@ -249,8 +281,9 @@ public class ChatProcessor : INotifyPropertyChanged
                     copied++;
                 }
 
-                var html     = HTMLGenerator.Generate(chat, MySenderRaw, MyDisplayName, MyPhone,
-                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir);
+                var html     = HTMLGenerator.Generate(chat, MySenderRaw, ResolvedMyDisplayName, ResolvedMyPhone,
+                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness,
+                    groupParticipants: ResolvedGroupParticipants, mediaDir: mediaDir);
                 var htmlPath = Path.Combine(outputDir, "WhatsApp.html");
                 File.WriteAllText(htmlPath, html, System.Text.Encoding.UTF8);
 
