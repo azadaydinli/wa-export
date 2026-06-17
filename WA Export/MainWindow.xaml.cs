@@ -225,7 +225,7 @@ public sealed partial class MainWindow : Window
         try
         {
             _updateManager = new UpdateManager(
-                new GithubSource("https://github.com/azadaydinli/wa-export-windows", null, true));
+                new GithubSource("https://github.com/azadaydinli/wa-export", null, true));
             _pendingUpdate = await _updateManager.CheckForUpdatesAsync();
             if (_pendingUpdate is not null)
                 UpdateInfoBar.IsOpen = true;
