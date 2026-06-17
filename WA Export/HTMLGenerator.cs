@@ -173,7 +173,8 @@ public static class HTMLGenerator
               .row    { page-break-inside: avoid; break-inside: avoid; }
               .bubble { page-break-inside: avoid; break-inside: avoid; }
               .date-sep { page-break-after: avoid; break-after: avoid; }
-              audio, video { display: none; }
+              audio { display: none; }
+              video { max-width: 200px; }
             }
             </style>
             </head>
