@@ -1,3 +1,4 @@
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -22,27 +23,43 @@ public sealed partial class PreviewWindow : Window
     private void ConfigureWindow()
     {
         var hwnd      = WindowNative.GetWindowHandle(this);
-        var windowId  = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
+        var windowId  = Win32Interop.GetWindowIdFromWindow(hwnd);
         var appWindow = AppWindow.GetFromWindowId(windowId);
-        appWindow.Resize(new SizeInt32(820, 900));
+
+        var scale = Content.XamlRoot?.RasterizationScale ?? 1.0;
+        appWindow.Resize(new SizeInt32((int)(820 * scale), (int)(900 * scale)));
         appWindow.Title = "Önizləmə";
     }
 
     private async Task InitWebViewAsync()
     {
-        await WebView.EnsureCoreWebView2Async();
-        WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
-            "waexport.local",
-            Path.GetDirectoryName(_htmlPath)!,
-            CoreWebView2HostResourceAccessKind.Allow);
-        WebView.CoreWebView2.Navigate($"https://waexport.local/{Path.GetFileName(_htmlPath)}");
-
-        WebView.CoreWebView2.NewWindowRequested += (sender, e) =>
+        try
         {
-            e.Handled = true;
-            Windows.System.Launcher.LaunchUriAsync(new Uri(e.Uri));
-        };
+            await WebView.EnsureCoreWebView2Async();
+            WebView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                "waexport.local",
+                Path.GetDirectoryName(_htmlPath)!,
+                CoreWebView2HostResourceAccessKind.Allow);
+            WebView.CoreWebView2.Navigate($"https://waexport.local/{Path.GetFileName(_htmlPath)}");
+
+            WebView.CoreWebView2.NewWindowRequested += (sender, e) =>
+            {
+                e.Handled = true;
+                Windows.System.Launcher.LaunchUriAsync(new Uri(e.Uri));
+            };
+        }
+        catch
+        {
+            WebView.Visibility = Visibility.Collapsed;
+            ErrorPanel.Visibility = Visibility.Visible;
+        }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
+
+    private async void DownloadButton_Click(object sender, RoutedEventArgs e)
+    {
+        await Windows.System.Launcher.LaunchUriAsync(
+            new Uri("https://go.microsoft.com/fwlink/p/?LinkId=2124703"));
+    }
 }

@@ -25,5 +25,24 @@
 
         <!-- WebView2 -->
         <WebView2 Grid.Row="1" x:Name="WebView" VerticalAlignment="Stretch"/>
+
+        <!-- WebView2 error panel -->
+        <StackPanel x:Name="ErrorPanel" Grid.Row="1" Visibility="Collapsed"
+                    VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16" Padding="32">
+            <FontIcon Glyph="&#xE783;" FontSize="48"
+                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                      HorizontalAlignment="Center"/>
+            <TextBlock Text="WebView2 Runtime tapılmadı"
+                       Style="{StaticResource SubtitleTextBlockStyle}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Önizləmə üçün Microsoft Edge WebView2 Runtime lazımdır. Aşağıdakı düymə ilə quraşdırın."
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextWrapping="Wrap" TextAlignment="Center" MaxWidth="400"/>
+            <Button x:Name="DownloadButton" Content="WebView2 Runtime-ı endir və quraşdır"
+                    Style="{StaticResource AccentButtonStyle}"
+                    HorizontalAlignment="Center"
+                    Click="DownloadButton_Click"/>
+        </StackPanel>
     </Grid>
 </Window>
