@@ -128,8 +128,11 @@ public class ChatProcessor : INotifyPropertyChanged
             await ZipHandler.ExtractAsync(zipPath, tempDir, prog);
             Progress = 1;
 
-            var chatFile = Directory.GetFiles(tempDir, "_chat.txt", SearchOption.TopDirectoryOnly).FirstOrDefault();
-            if (chatFile is null) throw new Exception("_chat.txt ZIP faylında tapılmadı.");
+            var chatFile =
+                Directory.GetFiles(tempDir, "_chat.txt", SearchOption.TopDirectoryOnly).FirstOrDefault()
+                ?? Directory.GetFiles(tempDir, "*.txt", SearchOption.TopDirectoryOnly)
+                    .FirstOrDefault(f => !Path.GetFileName(f).StartsWith("."));
+            if (chatFile is null) throw new Exception("Chat faylı ZIP-də tapılmadı.");
 
             Status = "Mesajlar oxunur…";
             var text     = File.ReadAllText(chatFile, System.Text.Encoding.UTF8);
@@ -268,10 +271,19 @@ public class ChatProcessor : INotifyPropertyChanged
     private static (string chatName, bool isWhatsAppBusiness) DeriveChatDetails(string zipPath)
     {
         var base_ = Path.GetFileNameWithoutExtension(zipPath);
+
+        // Prefix format (iOS / desktop): "WhatsApp Chat - Name"
         foreach (var p in new[] { "WhatsApp Business Chat - ", "WhatsApp Business Söhbəti - ", "WhatsApp Business Sohbeti - " })
-            if (base_.StartsWith(p)) return (base_[p.Length..], true);
+            if (base_.StartsWith(p, StringComparison.OrdinalIgnoreCase)) return (base_[p.Length..], true);
         foreach (var p in new[] { "WhatsApp Chat - ", "WhatsApp Söhbəti - ", "WhatsApp Sohbeti - " })
-            if (base_.StartsWith(p)) return (base_[p.Length..], false);
-        return (base_, base_.Contains("Business"));
+            if (base_.StartsWith(p, StringComparison.OrdinalIgnoreCase)) return (base_[p.Length..], false);
+
+        // Suffix format (Android Azerbaijani): "Name ilə WhatsApp söhbəti"
+        foreach (var s in new[] { " ilə WhatsApp Biznes söhbəti", " ilə WhatsApp biznes söhbəti" })
+            if (base_.EndsWith(s, StringComparison.OrdinalIgnoreCase)) return (base_[..^s.Length], true);
+        foreach (var s in new[] { " ilə WhatsApp söhbəti", " ile WhatsApp sohbeti" })
+            if (base_.EndsWith(s, StringComparison.OrdinalIgnoreCase)) return (base_[..^s.Length], false);
+
+        return (base_, base_.Contains("Business", StringComparison.OrdinalIgnoreCase));
     }
 }
