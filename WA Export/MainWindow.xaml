@@ -152,6 +152,25 @@
                 </StackPanel>
             </Border>
 
+            <!-- Transcription card -->
+            <Border x:Name="TranscriptCard" CornerRadius="10" Padding="0"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="Collapsed">
+                <Grid Padding="14,10" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <PasswordBox x:Name="ApiKeyBox" Grid.Column="0"
+                                 PlaceholderText="OpenAI API açarı (sk-…)"
+                                 PasswordChanged="ApiKeyBox_PasswordChanged"/>
+                    <Button x:Name="TranscribeButton" Grid.Column="1"
+                            Content="Transkript et" IsEnabled="False"
+                            Click="TranscribeButton_Click"/>
+                </Grid>
+            </Border>
+
             <!-- Date range card -->
             <Border x:Name="DateRangeCard" CornerRadius="10" Padding="0"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"

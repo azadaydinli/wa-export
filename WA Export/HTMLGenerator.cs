@@ -14,7 +14,8 @@ public static class HTMLGenerator
         string otherPhone,
         bool isWhatsAppBusiness,
         string mediaBasePath = "Media",
-        string? mediaDir = null)
+        string? mediaDir = null,
+        IReadOnlyDictionary<string, string>? transcriptions = null)
     {
         var dateFmt = "dd.MM.yyyy";
         var timeFmt = "HH:mm";
@@ -72,7 +73,7 @@ public static class HTMLGenerator
                     contentHtml = $"<div class=\"text\">{H(t.Value).Replace("\n", "<br>")}</div>";
                     break;
                 case MessageContent.Media m:
-                    contentHtml = MediaHtml(m.Filename, m.Type, mediaBasePath, mediaDir);
+                    contentHtml = MediaHtml(m.Filename, m.Type, mediaBasePath, mediaDir, transcriptions);
                     break;
                 case MessageContent.System s:
                     if (ParseCall(s.Value) is { } call)
@@ -158,6 +159,7 @@ public static class HTMLGenerator
             .call-info-text { display: flex; flex-direction: column; }
             .call-title { font-weight: 700; font-size: 14px; color: #111b21; }
             .call-sub   { font-size: 12px; color: #667781; margin-top: 2px; }
+            .transcript { font-size: 13px; color: #111b21; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,.08); line-height: 1.5; white-space: pre-wrap; }
             @page { margin: 0.8cm 0.8cm 0.8cm 2cm; }
             @media print {
               *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -197,11 +199,16 @@ public static class HTMLGenerator
 
     // MARK: - Media
 
-    private static string MediaHtml(string filename, MediaType type, string mediaBasePath, string? mediaDir)
+    private static string MediaHtml(string filename, MediaType type, string mediaBasePath, string? mediaDir,
+        IReadOnlyDictionary<string, string>? transcriptions)
     {
         var path        = string.IsNullOrEmpty(mediaBasePath) ? filename : $"{mediaBasePath}/{filename}";
         var escaped     = H(path);
         var nameEscaped = H(filename);
+
+        var transcriptHtml = transcriptions is not null && transcriptions.TryGetValue(filename, out var t) && !string.IsNullOrWhiteSpace(t)
+            ? $"\n<div class=\"transcript\">{H(t)}</div>"
+            : "";
 
         return type switch
         {
@@ -213,12 +220,12 @@ public static class HTMLGenerator
             MediaType.Audio => $"""
                 <audio controls preload="metadata">
                   <source src="{escaped}">
-                </audio>
+                </audio>{transcriptHtml}
                 """,
             MediaType.Video => $"""
                 <video controls preload="auto">
                   <source src="{escaped}">
-                </video>
+                </video>{transcriptHtml}
                 """,
             MediaType.Document => DocumentHtml(filename, escaped, nameEscaped, mediaDir),
             _ => ""

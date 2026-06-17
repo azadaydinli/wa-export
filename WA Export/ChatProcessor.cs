@@ -12,7 +12,7 @@ public class ChatProcessor : INotifyPropertyChanged
     // MARK: - Published state
 
     private ParsedChat? _parsedChat;
-    public ParsedChat? ParsedChat { get => _parsedChat; private set { _parsedChat = value; Notify(); Notify(nameof(HasChat)); } }
+    public ParsedChat? ParsedChat { get => _parsedChat; private set { _parsedChat = value; Notify(); Notify(nameof(HasChat)); Notify(nameof(CanTranscribe)); } }
 
     public bool HasChat => _parsedChat is not null;
 
@@ -23,7 +23,7 @@ public class ChatProcessor : INotifyPropertyChanged
     public string? ErrorMessage { get => _errorMessage; private set { _errorMessage = value; Notify(); } }
 
     private bool _isProcessing;
-    public bool IsProcessing { get => _isProcessing; private set { _isProcessing = value; Notify(); } }
+    public bool IsProcessing { get => _isProcessing; private set { _isProcessing = value; Notify(); Notify(nameof(CanTranscribe)); } }
 
     private double _progress;
     public double Progress { get => _progress; private set { _progress = value; Notify(); } }
@@ -33,6 +33,20 @@ public class ChatProcessor : INotifyPropertyChanged
 
     private bool _isWhatsAppBusiness;
     public bool IsWhatsAppBusiness { get => _isWhatsAppBusiness; private set { _isWhatsAppBusiness = value; Notify(); } }
+
+    // MARK: - Transcription
+
+    private readonly Dictionary<string, string> _transcriptions = new();
+    public IReadOnlyDictionary<string, string> Transcriptions => _transcriptions;
+
+    private string _whisperApiKey = "";
+    public string WhisperApiKey
+    {
+        get => _whisperApiKey;
+        set { _whisperApiKey = value; Notify(); Notify(nameof(CanTranscribe)); }
+    }
+
+    public bool CanTranscribe => !string.IsNullOrWhiteSpace(_whisperApiKey) && HasChat && !IsProcessing;
 
     // MARK: - Identity
 
@@ -118,6 +132,7 @@ public class ChatProcessor : INotifyPropertyChanged
         ErrorMessage = null;
         PreviewHtmlPath = null;
         Status = "ZIP açılır…";
+        _transcriptions.Clear();
 
         try
         {
@@ -189,6 +204,45 @@ public class ChatProcessor : INotifyPropertyChanged
         IsProcessing = false;
     }
 
+    public async Task TranscribeAudioAsync()
+    {
+        if (_extractedDir is null || _parsedChat is null) return;
+
+        var audioFiles = _parsedChat.Messages
+            .Where(m => m.Content is MessageContent.Media { Type: MediaType.Audio })
+            .Select(m => ((MessageContent.Media)m.Content).Filename)
+            .Distinct()
+            .ToList();
+
+        if (audioFiles.Count == 0) { Status = "Transkript ediləcək audio tapılmadı."; return; }
+
+        IsProcessing = true;
+        ErrorMessage = null;
+        var done = 0;
+
+        foreach (var filename in audioFiles)
+        {
+            Status = $"Transkript edilir… {done + 1}/{audioFiles.Count}";
+            Progress = (double)done / audioFiles.Count;
+
+            var path = Path.Combine(_extractedDir, filename);
+            if (File.Exists(path))
+            {
+                try
+                {
+                    var text = await TranscriptionService.TranscribeAsync(path, _whisperApiKey);
+                    if (text is not null) _transcriptions[filename] = text;
+                }
+                catch { }
+            }
+            Progress = (double)++done / audioFiles.Count;
+        }
+
+        IsProcessing = false;
+        Status = $"✓ {_transcriptions.Count}/{audioFiles.Count} audio transkript edildi.";
+        RegeneratePreview();
+    }
+
     public void RegeneratePreview()
     {
         if (FilteredChat is { } chat && _extractedDir is not null)
@@ -200,7 +254,7 @@ public class ChatProcessor : INotifyPropertyChanged
         var html = HTMLGenerator.Generate(
             chat, MySenderRaw, MyDisplayName, MyPhone,
             OtherDisplayName, OtherPhone, IsWhatsAppBusiness,
-            mediaBasePath: "", mediaDir: dir);
+            mediaBasePath: "", mediaDir: dir, transcriptions: _transcriptions);
 
         var path = Path.Combine(dir, "_preview.html");
         File.WriteAllText(path, html, System.Text.Encoding.UTF8);
@@ -250,7 +304,8 @@ public class ChatProcessor : INotifyPropertyChanged
                 }
 
                 var html     = HTMLGenerator.Generate(chat, MySenderRaw, MyDisplayName, MyPhone,
-                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir);
+                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir,
+                    transcriptions: _transcriptions);
                 var htmlPath = Path.Combine(outputDir, "WhatsApp.html");
                 File.WriteAllText(htmlPath, html, System.Text.Encoding.UTF8);
 
