@@ -5,7 +5,8 @@ namespace WAExport;
 public static class ChatParser
 {
     private const char LtrMark = '‎';
-    private static readonly Regex LineRegex = new(@"^‎?\[(\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)");
+    private static readonly Regex LineRegex = new(@"^‎?\[(\d{2}\.\d{2}\.\d{2},? \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)");
+    private static readonly string[] DateFormats = ["dd.MM.yy HH:mm:ss", "dd.MM.yy, HH:mm:ss"];
 
     public static ParsedChat Parse(string text, string chatName)
     {
@@ -44,7 +45,7 @@ public static class ChatParser
                 var sender  = match.Groups[2].Value;
                 var msgRaw  = match.Groups[3].Value;
 
-                if (DateTime.TryParseExact(dateStr, "dd.MM.yy HH:mm:ss",
+                if (DateTime.TryParseExact(dateStr, DateFormats,
                     System.Globalization.CultureInfo.InvariantCulture,
                     System.Globalization.DateTimeStyles.None, out var date))
                 {
