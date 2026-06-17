@@ -45,7 +45,7 @@ public sealed partial class PreviewWindow : Window
             WebView.CoreWebView2.NewWindowRequested += (sender, e) =>
             {
                 e.Handled = true;
-                Windows.System.Launcher.LaunchUriAsync(new Uri(e.Uri));
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri(e.Uri));
             };
         }
         catch
