@@ -15,7 +15,6 @@ public sealed partial class MainWindow : Window
     private readonly ChatProcessor _proc = new();
     private bool _suppressDateEvents;
     private UpdateManager? _updateManager;
-    private UpdateInfo? _pendingUpdate;
 
     public MainWindow()
     {
@@ -36,6 +35,7 @@ public sealed partial class MainWindow : Window
         var scale = Content.XamlRoot?.RasterizationScale ?? 1.0;
         appWindow.Resize(new SizeInt32((int)(560 * scale), (int)(600 * scale)));
         appWindow.Title = "WA Export";
+        appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "app.ico"));
     }
 
     // MARK: - Processor binding
@@ -221,32 +221,45 @@ public sealed partial class MainWindow : Window
         {
             _updateManager = new UpdateManager(
                 new GithubSource("https://github.com/azadaydinli/wa-export", null, true));
-            _pendingUpdate = await _updateManager.CheckForUpdatesAsync();
-            if (_pendingUpdate is not null)
-                UpdateInfoBar.IsOpen = true;
-        }
-        catch { /* Offline və ya xəta — laqeyd keç */ }
-    }
+            var update = await _updateManager.CheckForUpdatesAsync();
+            if (update is null) return;
 
-    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_updateManager is null || _pendingUpdate is null) return;
+            var confirm = new ContentDialog
+            {
+                Title          = "Yeni versiya mövcuddur",
+                Content        = $"Versiya {update.TargetFullRelease.Version} mövcuddur. İndi yeniləmək istəyirsiniz?",
+                PrimaryButtonText = "Yenilə",
+                CloseButtonText   = "Sonra",
+                XamlRoot       = Content.XamlRoot
+            };
 
-        UpdateButton.IsEnabled = false;
-        UpdateButton.Content   = "Yüklənir…";
+            if (await confirm.ShowAsync() != ContentDialogResult.Primary) return;
 
-        try
-        {
-            await _updateManager.DownloadUpdatesAsync(_pendingUpdate, p =>
+            var progressBar = new ProgressBar { Minimum = 0, Maximum = 100, Width = 320 };
+            var statusText  = new TextBlock   { Text = "Yüklənir… 0%", Margin = new Microsoft.UI.Xaml.Thickness(0, 8, 0, 0) };
+            var panel = new StackPanel { Spacing = 4 };
+            panel.Children.Add(progressBar);
+            panel.Children.Add(statusText);
+
+            var progressDialog = new ContentDialog
+            {
+                Title   = "Yenilənir",
+                Content = panel,
+                XamlRoot = Content.XamlRoot
+            };
+
+            _ = progressDialog.ShowAsync();
+
+            await _updateManager.DownloadUpdatesAsync(update, p =>
                 DispatcherQueue.TryEnqueue(() =>
-                    UpdateButton.Content = $"Yüklənir… {p}%"));
+                {
+                    progressBar.Value = p;
+                    statusText.Text   = $"Yüklənir… {p}%";
+                }));
 
-            _updateManager.ApplyUpdatesAndRestart(_pendingUpdate);
+            progressDialog.Hide();
+            _updateManager.ApplyUpdatesAndRestart(update);
         }
-        catch
-        {
-            UpdateButton.IsEnabled = true;
-            UpdateButton.Content   = "Yenilə və yenidən başlat";
-        }
+        catch { }
     }
 }

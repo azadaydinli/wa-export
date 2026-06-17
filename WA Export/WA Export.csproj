@@ -22,4 +22,10 @@
     <PackageReference Include="Velopack" Version="0.0.878" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
