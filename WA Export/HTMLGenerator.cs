@@ -158,11 +158,22 @@ public static class HTMLGenerator
             .call-info-text { display: flex; flex-direction: column; }
             .call-title { font-weight: 700; font-size: 14px; color: #111b21; }
             .call-sub   { font-size: 12px; color: #667781; margin-top: 2px; }
+            @page { margin: 0.8cm 0.8cm 0.8cm 2cm; }
             @media print {
-              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-              .sticky-top { position: static; box-shadow: none; }
-              .row    { page-break-inside: avoid; }
-              .bubble { page-break-inside: avoid; }
+              *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              body { background: #e5ddd5 !important; }
+              .sticky-top { position: static !important; box-shadow: none; }
+              header { background: #075e54 !important; color: #fff !important; }
+              .participants-bar { background: #fff !important; border-bottom: 1px solid #e9edef !important; }
+              .participants-inner { max-width: 100%; }
+              .container { max-width: 100%; }
+              .in  .bubble { background: #fff !important; }
+              .out .bubble { background: #d9fdd3 !important; }
+              .date-sep span { background: rgba(255,255,255,.85) !important; }
+              .row    { page-break-inside: avoid; break-inside: avoid; }
+              .bubble { page-break-inside: avoid; break-inside: avoid; }
+              .date-sep { page-break-after: avoid; break-after: avoid; }
+              audio, video { display: none; }
             }
             </style>
             </head>
