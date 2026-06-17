@@ -217,7 +217,7 @@ public class ChatProcessor : INotifyPropertyChanged
         RegeneratePreview();
     }
 
-    public async Task ExportZipAsync(string outputPath)
+    public async Task ExportToFolderAsync(string outputDir)
     {
         if (FilteredChat is not { } chat || _extractedDir is null) return;
 
@@ -227,37 +227,38 @@ public class ChatProcessor : INotifyPropertyChanged
 
         try
         {
-            var workDir  = Path.Combine(Path.GetTempPath(), $"WAOutput_{Guid.NewGuid():N}");
-            var mediaDir = Path.Combine(workDir, "Media");
-            Directory.CreateDirectory(mediaDir);
-
-            var referencedMedia = chat.Messages
-                .OfType<ChatMessage>()
-                .Where(m => m.Content is MessageContent.Media)
-                .Select(m => ((MessageContent.Media)m.Content).Filename)
-                .ToHashSet();
-
-            var copied = 0;
-            foreach (var file in Directory.GetFiles(_extractedDir))
+            await Task.Run(() =>
             {
-                var fn = Path.GetFileName(file);
-                if (fn == "_chat.txt" || fn.StartsWith("_preview")) continue;
-                if (!referencedMedia.Contains(fn)) continue;
-                File.Copy(file, Path.Combine(mediaDir, fn), overwrite: true);
-                copied++;
-            }
+                var mediaDir = Path.Combine(outputDir, "Media");
+                Directory.CreateDirectory(outputDir);
+                Directory.CreateDirectory(mediaDir);
 
-            var html    = HTMLGenerator.Generate(chat, MySenderRaw, MyDisplayName, MyPhone,
-                OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir);
-            var htmlPath = Path.Combine(workDir, "WhatsApp.html");
-            File.WriteAllText(htmlPath, html, System.Text.Encoding.UTF8);
+                var referencedMedia = chat.Messages
+                    .OfType<ChatMessage>()
+                    .Where(m => m.Content is MessageContent.Media)
+                    .Select(m => ((MessageContent.Media)m.Content).Filename)
+                    .ToHashSet();
 
-            Status = "ZIP yaradılır…";
-            var items = new List<string> { "WhatsApp.html" };
-            if (copied > 0) items.Add("Media");
-            await ZipHandler.CreateAsync(workDir, items, outputPath);
+                var copied = 0;
+                foreach (var file in Directory.GetFiles(_extractedDir))
+                {
+                    var fn = Path.GetFileName(file);
+                    if (fn == "_chat.txt" || fn.StartsWith("_preview")) continue;
+                    if (!referencedMedia.Contains(fn)) continue;
+                    File.Copy(file, Path.Combine(mediaDir, fn), overwrite: true);
+                    copied++;
+                }
 
-            Status = $"✓ Export tamamlandı! {copied} media faylı əlavə edildi.";
+                var html     = HTMLGenerator.Generate(chat, MySenderRaw, MyDisplayName, MyPhone,
+                    OtherDisplayName, OtherPhone, IsWhatsAppBusiness, mediaDir: mediaDir);
+                var htmlPath = Path.Combine(outputDir, "WhatsApp.html");
+                File.WriteAllText(htmlPath, html, System.Text.Encoding.UTF8);
+
+                if (copied == 0)
+                    Directory.Delete(mediaDir);
+
+                Status = $"✓ Export tamamlandı! {copied} media faylı əlavə edildi.";
+            });
         }
         catch (Exception ex)
         {

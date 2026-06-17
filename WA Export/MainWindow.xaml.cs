@@ -141,15 +141,16 @@ public sealed partial class MainWindow : Window
     {
         if (_proc.ParsedChat is null) return;
 
-        var picker = new FileSavePicker();
+        var picker = new FolderPicker();
         InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-        picker.SuggestedFileName = $"WA Export - {_proc.ParsedChat.ChatName}";
-        picker.FileTypeChoices.Add("ZIP Arxivi", new List<string> { ".zip" });
+        picker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        picker.FileTypeFilter.Add("*");
 
-        var file = await picker.PickSaveFileAsync();
-        if (file is null) return;
+        var folder = await picker.PickSingleFolderAsync();
+        if (folder is null) return;
 
-        await _proc.ExportZipAsync(file.Path);
+        var outputDir = Path.Combine(folder.Path, $"WA Export - {_proc.ParsedChat.ChatName}");
+        await _proc.ExportToFolderAsync(outputDir);
     }
 
     private void PreviewButton_Click(object sender, RoutedEventArgs e)
