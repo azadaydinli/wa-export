@@ -156,7 +156,7 @@ public sealed partial class MainWindow : Window
 
         var dialog = new ContentDialog
         {
-            Title             = "Export tamamlandı",
+            Title             = "İxrac tamamlandı",
             Content           = $"Fayl saxlandı:\n{outputDir}",
             PrimaryButtonText = "Qovluğu aç",
             CloseButtonText   = "Bağla",
