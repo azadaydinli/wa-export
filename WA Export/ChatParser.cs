@@ -85,11 +85,22 @@ public static class ChatParser
         var closeIdx = s.LastIndexOf('>');
         if (openIdx < 0 || closeIdx < 0 || openIdx >= closeIdx) return null;
 
-        var inner = s[(openIdx + 1)..closeIdx];
-        var parts = inner.Split(' ');
-        if (parts.Length < 2) return null;
+        var inner = s[(openIdx + 1)..closeIdx].Trim();
 
-        var filename = string.Join(" ", parts[..^1]);
+        string filename;
+        if (inner.StartsWith("attached: ", StringComparison.OrdinalIgnoreCase))
+        {
+            // Android format: <attached: filename.ext>
+            filename = inner["attached: ".Length..].Trim();
+        }
+        else
+        {
+            // iOS format: <filename.ext omitted>
+            var parts = inner.Split(' ');
+            if (parts.Length < 2) return null;
+            filename = string.Join(" ", parts[..^1]);
+        }
+
         var ext = Path.GetExtension(filename);
         if (string.IsNullOrEmpty(ext) || string.IsNullOrEmpty(filename)) return null;
         return filename;
