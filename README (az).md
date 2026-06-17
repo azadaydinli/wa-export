@@ -2,7 +2,7 @@
 
 <p>
   <a href="README.md">🇬🇧 English</a> &nbsp;·&nbsp;
-  <a href="README.ru.md">🇷🇺 Русский</a>
+  <a href="README (ru).md">🇷🇺 Русский</a>
 </p>
 
 [![Yükləmə](https://img.shields.io/github/downloads/azadaydinli/wa-export/total?style=flat&label=yükləmə&color=brightgreen)](https://github.com/azadaydinli/wa-export/releases)

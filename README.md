@@ -1,8 +1,8 @@
 # WA Export
 
 <p>
-  <a href="README.az.md">🇦🇿 Azərbaycan</a> &nbsp;·&nbsp;
-  <a href="README.ru.md">🇷🇺 Русский</a>
+  <a href="README (az).md">🇦🇿 Azərbaycan</a> &nbsp;·&nbsp;
+  <a href="README (ru).md">🇷🇺 Русский</a>
 </p>
 
 [![Downloads](https://img.shields.io/github/downloads/azadaydinli/wa-export/total?style=flat&label=downloads&color=brightgreen)](https://github.com/azadaydinli/wa-export/releases)
