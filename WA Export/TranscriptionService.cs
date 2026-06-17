@@ -23,10 +23,10 @@ public static class TranscriptionService
         request.Headers.Add("Authorization", $"Bearer {apiKey}");
 
         using var form = new MultipartFormDataContent();
-        form.Add(new StringContent("whisper-1"), "model");
-        form.Add(new StringContent("text"),      "response_format");
-        // Azerbaijani hint — auto-detection still runs, but model prioritises az
-        form.Add(new StringContent("Azərbaycan dilindədir."), "prompt");
+        form.Add(new StringContent("gpt-4o-transcribe"), "model");
+        form.Add(new StringContent("text"), "response_format");
+        form.Add(new StringContent("az"), "language");
+        form.Add(new StringContent("Azərbaycan dilində danışıq səsidir. Ləhcə, jarqon və danışıq ifadələri ola bilər. Məntiqi və anlaşıqlı cümlələr qur."), "prompt");
 
         var bytes   = await File.ReadAllBytesAsync(audioPath, ct);
         var content = new ByteArrayContent(bytes);
