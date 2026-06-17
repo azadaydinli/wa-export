@@ -151,6 +151,20 @@ public sealed partial class MainWindow : Window
 
         var outputDir = Path.Combine(folder.Path, $"WA Export - {_proc.ParsedChat.ChatName}");
         await _proc.ExportToFolderAsync(outputDir);
+
+        if (_proc.ErrorMessage is not null) return;
+
+        var dialog = new ContentDialog
+        {
+            Title             = "Export tamamlandı",
+            Content           = $"Fayl saxlandı:\n{outputDir}",
+            PrimaryButtonText = "Qovluğu aç",
+            CloseButtonText   = "Bağla",
+            XamlRoot          = Content.XamlRoot
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            await Windows.System.Launcher.LaunchFolderPathAsync(outputDir);
     }
 
     private void PreviewButton_Click(object sender, RoutedEventArgs e)
