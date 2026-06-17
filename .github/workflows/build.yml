@@ -60,7 +60,7 @@ jobs:
         run: |
           $setup = Get-ChildItem releases -Filter "*Setup*" | Select-Object -First 1
           gh release create "v1.0.${{ github.run_number }}" `
-            "$($setup.FullName)#WAExport-win-Setup.exe" `
+            "$($setup.FullName)#waexport_setup.exe" `
             --title "v1.0.${{ github.run_number }}" `
             --notes "WA Export v1.0.${{ github.run_number }}"
         env:
