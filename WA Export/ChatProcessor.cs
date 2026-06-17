@@ -12,7 +12,7 @@ public class ChatProcessor : INotifyPropertyChanged
     // MARK: - Published state
 
     private ParsedChat? _parsedChat;
-    public ParsedChat? ParsedChat { get => _parsedChat; private set { _parsedChat = value; Notify(); Notify(nameof(HasChat)); Notify(nameof(CanTranscribe)); } }
+    public ParsedChat? ParsedChat { get => _parsedChat; private set { _parsedChat = value; Notify(); Notify(nameof(HasChat)); } }
 
     public bool HasChat => _parsedChat is not null;
 
@@ -23,7 +23,7 @@ public class ChatProcessor : INotifyPropertyChanged
     public string? ErrorMessage { get => _errorMessage; private set { _errorMessage = value; Notify(); } }
 
     private bool _isProcessing;
-    public bool IsProcessing { get => _isProcessing; private set { _isProcessing = value; Notify(); Notify(nameof(CanTranscribe)); } }
+    public bool IsProcessing { get => _isProcessing; private set { _isProcessing = value; Notify(); } }
 
     private double _progress;
     public double Progress { get => _progress; private set { _progress = value; Notify(); } }
