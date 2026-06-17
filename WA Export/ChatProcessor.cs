@@ -251,7 +251,12 @@ public class ChatProcessor : INotifyPropertyChanged
                     var text = await TranscriptionService.TranscribeAsync(path, _whisperApiKey);
                     if (text is not null) _transcriptions[filename] = text;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    IsProcessing = false;
+                    Status = $"Xəta: {ex.Message}";
+                    return;
+                }
             }
             Progress = (double)++done / audioList.Count;
         }

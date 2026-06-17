@@ -36,7 +36,11 @@ public static class TranscriptionService
         request.Content = form;
 
         var response = await _http.SendAsync(request, ct);
-        if (!response.IsSuccessStatusCode) return null;
+        if (!response.IsSuccessStatusCode)
+        {
+            var err = await response.Content.ReadAsStringAsync(ct);
+            throw new Exception($"HTTP {(int)response.StatusCode}: {err}");
+        }
         return (await response.Content.ReadAsStringAsync(ct)).Trim();
     }
 }
