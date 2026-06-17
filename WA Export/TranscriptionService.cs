@@ -31,7 +31,11 @@ public static class TranscriptionService
         var bytes   = await File.ReadAllBytesAsync(audioPath, ct);
         var content = new ByteArrayContent(bytes);
         content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mime);
-        form.Add(content, "file", Path.GetFileName(audioPath));
+        // API doesn't accept .opus extension — send as .ogg (same container)
+        var uploadName = Path.GetExtension(audioPath).ToLowerInvariant() == ".opus"
+            ? Path.GetFileNameWithoutExtension(audioPath) + ".ogg"
+            : Path.GetFileName(audioPath);
+        form.Add(content, "file", uploadName);
 
         request.Content = form;
 
