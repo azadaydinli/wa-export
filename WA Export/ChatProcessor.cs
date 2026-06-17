@@ -197,8 +197,7 @@ public class ChatProcessor : INotifyPropertyChanged
         IsProcessing = false;
     }
 
-    private static readonly HashSet<string> AudioExtensions =
-        ["mp3", "m4a", "aac", "opus", "ogg", "wav", "flac"];
+    private static readonly HashSet<string> AudioExtensions = ["opus"];
 
     public async Task TranscribeAudioAsync()
     {
