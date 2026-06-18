@@ -65,13 +65,22 @@ jobs:
 
       - name: Update the update channel
         run: |
-          gh release delete "update-channel" --yes --cleanup-tag 2>$null; $true
+          # Create once if missing; never delete so it keeps its original date and stays last
+          $null = gh release view "update-channel" 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            gh release create "update-channel" `
+              --prerelease `
+              --title "Update Channel" `
+              --notes "Internal update channel. Do not download manually."
+          }
+          # Delete old assets, upload fresh ones
+          $rel = gh api "repos/${{ github.repository }}/releases/tags/update-channel" | ConvertFrom-Json
+          foreach ($asset in $rel.assets) {
+            gh api --method DELETE "repos/${{ github.repository }}/releases/assets/$($asset.id)"
+          }
           $nupkgs = Get-ChildItem releases -Filter "*.nupkg" | ForEach-Object { $_.FullName }
           $files = @("releases/RELEASES", "releases/releases.win.json") + $nupkgs
-          gh release create "update-channel" @files `
-            --prerelease `
-            --title "Update Channel" `
-            --notes "Internal update channel. Do not download manually."
+          gh release upload "update-channel" @files
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
