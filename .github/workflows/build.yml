@@ -65,22 +65,29 @@ jobs:
 
       - name: Update the update channel
         run: |
-          # Create once if missing; never delete so it keeps its original date and stays last
+          $nupkgs = Get-ChildItem releases -Filter "*.nupkg" | ForEach-Object { $_.FullName }
+          $files = @("releases/RELEASES", "releases/releases.win.json") + $nupkgs
+          # Check if release exists
           $null = gh release view "update-channel" 2>&1
           if ($LASTEXITCODE -ne 0) {
-            gh release create "update-channel" `
+            # First time: create with a backdated tag pointing to first commit so it
+            # appears at the bottom of the GitHub Releases page
+            $firstCommit = git rev-list --max-parents=0 HEAD
+            $env:GIT_COMMITTER_DATE = "2020-01-01T00:00:00"
+            git tag -a update-channel $firstCommit -m "Update Channel"
+            git push origin update-channel
+            gh release create "update-channel" @files `
               --prerelease `
               --title "Update Channel" `
               --notes "Internal update channel. Do not download manually."
+          } else {
+            # Subsequent runs: delete old assets and upload fresh ones
+            $rel = gh api "repos/${{ github.repository }}/releases/tags/update-channel" | ConvertFrom-Json
+            foreach ($asset in $rel.assets) {
+              gh api --method DELETE "repos/${{ github.repository }}/releases/assets/$($asset.id)"
+            }
+            gh release upload "update-channel" @files
           }
-          # Delete old assets, upload fresh ones
-          $rel = gh api "repos/${{ github.repository }}/releases/tags/update-channel" | ConvertFrom-Json
-          foreach ($asset in $rel.assets) {
-            gh api --method DELETE "repos/${{ github.repository }}/releases/assets/$($asset.id)"
-          }
-          $nupkgs = Get-ChildItem releases -Filter "*.nupkg" | ForEach-Object { $_.FullName }
-          $files = @("releases/RELEASES", "releases/releases.win.json") + $nupkgs
-          gh release upload "update-channel" @files
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
