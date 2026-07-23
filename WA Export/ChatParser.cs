@@ -5,8 +5,18 @@ namespace WAExport;
 public static class ChatParser
 {
     private const char LtrMark = '‎';
-    private static readonly Regex LineRegex = new(@"^‎?\[(\d{2}\.\d{2}\.\d{2},? \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)");
-    private static readonly string[] DateFormats = ["dd.MM.yy HH:mm:ss", "dd.MM.yy, HH:mm:ss"];
+
+    private record Format(Regex Regex, string[] DateFormats);
+
+    private static readonly Format[] Formats =
+    [
+        // iOS: [DD.MM.YY[,] HH:MM:SS] Sender: message
+        new(new Regex(@"^‎?\[(\d{2}\.\d{2}\.\d{2},? \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)"),
+            ["dd.MM.yy HH:mm:ss", "dd.MM.yy, HH:mm:ss"]),
+        // Android US English: M/D/YY, H:MM AM/PM - Sender: message
+        new(new Regex(@"^(\d{1,2}/\d{1,2}/\d{2,4}, \d{1,2}:\d{2} [AP]M) - ([^:]+): (.*)"),
+            ["M/d/yy, h:mm tt"]),
+    ];
 
     public static ParsedChat Parse(string text, string chatName)
     {
@@ -37,15 +47,18 @@ public static class ChatParser
             var trimmed = line.TrimEnd('\r', '\n');
             if (string.IsNullOrEmpty(trimmed)) continue;
 
-            var match = LineRegex.Match(trimmed);
-            if (match.Success)
+            var matched = false;
+            foreach (var fmt in Formats)
             {
+                var match = fmt.Regex.Match(trimmed);
+                if (!match.Success) continue;
+
                 Flush();
                 var dateStr = match.Groups[1].Value;
                 var sender  = match.Groups[2].Value;
                 var msgRaw  = match.Groups[3].Value;
 
-                if (DateTime.TryParseExact(dateStr, DateFormats,
+                if (DateTime.TryParseExact(dateStr, fmt.DateFormats,
                     System.Globalization.CultureInfo.InvariantCulture,
                     System.Globalization.DateTimeStyles.None, out var date))
                 {
@@ -53,8 +66,10 @@ public static class ChatParser
                     pendingShender = sender;
                     pendingLines   = [msgRaw];
                 }
+                matched = true;
+                break;
             }
-            else if (pendingLines is not null)
+            if (!matched && pendingLines is not null)
             {
                 var cont = trimmed.TrimStart(LtrMark);
                 pendingLines.Add(cont);
@@ -81,6 +96,15 @@ public static class ChatParser
     private static string? ExtractMediaFilename(string line)
     {
         var s = line.TrimStart(LtrMark);
+
+        // Android US English: "filename.ext (file attached)"
+        const string attachedSuffix = " (file attached)";
+        if (s.EndsWith(attachedSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            var name = s[..^attachedSuffix.Length];
+            if (!string.IsNullOrEmpty(Path.GetExtension(name))) return name;
+        }
+
         var openIdx  = s.LastIndexOf('<');
         var closeIdx = s.LastIndexOf('>');
         if (openIdx < 0 || closeIdx < 0 || openIdx >= closeIdx) return null;
