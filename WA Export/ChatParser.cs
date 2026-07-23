@@ -5,6 +5,7 @@ namespace WAExport;
 public static class ChatParser
 {
     private const char LtrMark = '‎';
+    private const char NnbSp   = ' '; // Narrow No-Break Space used by WhatsApp before AM/PM
 
     private record Format(Regex Regex, string[] DateFormats);
 
@@ -13,8 +14,9 @@ public static class ChatParser
         // iOS: [DD.MM.YY[,] HH:MM:SS] Sender: message
         new(new Regex(@"^‎?\[(\d{2}\.\d{2}\.\d{2},? \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)"),
             ["dd.MM.yy HH:mm:ss", "dd.MM.yy, HH:mm:ss"]),
-        // Android US English: M/D/YY, H:MM AM/PM - Sender: message
-        new(new Regex(@"^(\d{1,2}/\d{1,2}/\d{2,4}, \d{1,2}:\d{2} [AP]M) - ([^:]+): (.*)"),
+        // Android US English: M/D/YY, H:MM[NNBSP]AM/PM - Sender: message
+        // Note: WhatsApp uses Narrow No-Break Space (U+202F) before AM/PM
+        new(new Regex(@"^(\d{1,2}/\d{1,2}/\d{2,4}, \d{1,2}:\d{2}[  ][AP]M) - ([^:]+): (.*)"),
             ["M/d/yy, h:mm tt"]),
     ];
 
@@ -54,7 +56,7 @@ public static class ChatParser
                 if (!match.Success) continue;
 
                 Flush();
-                var dateStr = match.Groups[1].Value;
+                var dateStr = match.Groups[1].Value.Replace(NnbSp, ' ');
                 var sender  = match.Groups[2].Value;
                 var msgRaw  = match.Groups[3].Value;
 
