@@ -14,6 +14,9 @@ public static class ChatParser
         // iOS: [DD.MM.YY[,] HH:MM:SS] Sender: message
         new(new Regex(@"^‎?\[(\d{2}\.\d{2}\.\d{2},? \d{2}:\d{2}:\d{2})\] ([^:]+): (.*)"),
             ["dd.MM.yy HH:mm:ss", "dd.MM.yy, HH:mm:ss"]),
+        // Turkish/Azerbaijani: [D/M/YYYY HH:MM:SS] Sender: message
+        new(new Regex(@"^‎?\[(\d{1,2}/\d{1,2}/\d{4} \d{2}:\d{2}:\d{2})\] (.+?): (.*)"),
+            ["d/M/yyyy HH:mm:ss"]),
         // Android US English: M/D/YY, H:MM[NNBSP]AM/PM - Sender: message
         // Note: WhatsApp uses Narrow No-Break Space (U+202F) before AM/PM
         new(new Regex(@"^(\d{1,2}/\d{1,2}/\d{2,4}, \d{1,2}:\d{2}[  ][AP]M) - (.+?): (.*)"),
