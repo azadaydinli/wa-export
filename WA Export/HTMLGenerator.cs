@@ -242,8 +242,11 @@ public static class HTMLGenerator
             .call-info-text { display: flex; flex-direction: column; }
             .call-title { font-weight: 700; font-size: 14px; color: #111b21; }
             .call-sub   { font-size: 12px; color: #667781; margin-top: 2px; }
+            #date-bubble { position: fixed; left: 50%; transform: translateX(-50%); top: 80px; background: rgba(255,255,255,.92); color: #54656f; font-size: 12px; padding: 4px 14px; border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity .22s ease; z-index: 100; white-space: nowrap; box-shadow: 0 1px 5px rgba(0,0,0,.16); }
+            #date-bubble.visible { opacity: 1; }
             @page { margin: 0.8cm 0.8cm 0.8cm 2cm; }
             @media print {
+              #date-bubble { display: none; }
               *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
               body { background: #e5ddd5 !important; }
               .sticky-top { position: static !important; box-shadow: none; }
@@ -268,12 +271,32 @@ public static class HTMLGenerator
               <header>{{H(platform)}}</header>
               {{participantsBar}}
             </div>
+            <div id="date-bubble"></div>
             <div class="container">
             {{body}}
             </div>
             <script>
             document.querySelectorAll('video').forEach(function(v){v.addEventListener('loadedmetadata',function(){v.currentTime=0.001;});});
             document.querySelectorAll('audio').forEach(function(a){a.addEventListener('play',function(){document.querySelectorAll('audio').forEach(function(o){if(o!==a)o.pause();});});});
+            (function(){
+              var bubble=document.getElementById('date-bubble');
+              var sticky=document.querySelector('.sticky-top');
+              var seps=Array.from(document.querySelectorAll('.date-sep'));
+              if(!bubble||!seps.length)return;
+              var timer=null;
+              window.addEventListener('scroll',function(){
+                var sb=sticky?sticky.getBoundingClientRect().bottom:0;
+                bubble.style.top=(sb+8)+'px';
+                var active=null;
+                for(var i=0;i<seps.length;i++){
+                  if(seps[i].getBoundingClientRect().top<=sb+1)
+                    active=seps[i].querySelector('span').textContent;
+                }
+                if(active){bubble.textContent=active;bubble.classList.add('visible');}
+                clearTimeout(timer);
+                timer=setTimeout(function(){bubble.classList.remove('visible');},1500);
+              },{passive:true});
+            })();
             </script>
             </body>
             </html>
