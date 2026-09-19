@@ -413,6 +413,7 @@ public static class HTMLGenerator
         var isVoice = lower.Contains("sesli") || lower.Contains("səsli") || lower.Contains("voice")
                    || lower.Contains("аудио") || lower.Contains("дозвониться") || lower.Contains("call failed");
         var isMissed = lower.Contains("cevapsız") || lower.Contains("cavabsız") || lower.Contains("missed")
+                    || lower.Contains("cevaplanmadı") || lower.Contains("cevaplanmadi")
                     || lower.Contains("пропущен") || lower.Contains("нет ответа") || lower.Contains("call failed");
         var isCallKw = lower.Contains("arama") || lower.Contains("zəng") || lower.Contains("zang")
                     || lower.Contains("call")   || lower.Contains("вызов") || lower.Contains("звонок");
@@ -420,9 +421,27 @@ public static class HTMLGenerator
         if (!(isVideo || isVoice) || !(isCallKw || isMissed)) return null;
 
         string? duration = null;
-        var durationMatch = System.Text.RegularExpressions.Regex.Match(text, @"\d+:\d{2}(?::\d{2})?");
-        if (durationMatch.Success)
-            duration = FormatDuration(durationMatch.Value);
+        // Try HH:MM:SS / MM:SS format first
+        var colonMatch = System.Text.RegularExpressions.Regex.Match(text, @"\d+:\d{2}(?::\d{2})?");
+        if (colonMatch.Success)
+        {
+            duration = FormatDuration(colonMatch.Value);
+        }
+        else
+        {
+            // Turkish/Azerbaijani: "4 dk.", "2 dk. 30 sn.", "55 sn."
+            var dkMatch = System.Text.RegularExpressions.Regex.Match(text,
+                @"(\d+)\s*dk\.?(?:\s*(\d+)\s*sn\.?)?|(\d+)\s*sn\.?",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (dkMatch.Success)
+            {
+                if (dkMatch.Groups[3].Success) // only seconds
+                    duration = BuildDur(0, 0, int.Parse(dkMatch.Groups[3].Value));
+                else
+                    duration = BuildDur(0, int.Parse(dkMatch.Groups[1].Value),
+                                           dkMatch.Groups[2].Success ? int.Parse(dkMatch.Groups[2].Value) : 0);
+            }
+        }
 
         return new CallInfo(isVideo, isMissed, duration);
     }
