@@ -21,6 +21,9 @@ public static class ChatParser
         // Note: WhatsApp uses Narrow No-Break Space (U+202F) before AM/PM
         new(new Regex(@"^(\d{1,2}/\d{1,2}/\d{2,4}, \d{1,2}:\d{2}[  ][AP]M) - (.+?): (.*)"),
             ["M/d/yy, h:mm tt"]),
+        // Android Azerbaijani: DD.MM.YY HH:MM - Sender: message
+        new(new Regex(@"^(\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}) - (.+?): (.*)"),
+            ["dd.MM.yy HH:mm"]),
     ];
 
     public static ParsedChat Parse(string text, string chatName)
@@ -102,12 +105,14 @@ public static class ChatParser
     {
         var s = line.TrimStart(LtrMark);
 
-        // Android US English: "filename.ext (file attached)"
-        const string attachedSuffix = " (file attached)";
-        if (s.EndsWith(attachedSuffix, StringComparison.OrdinalIgnoreCase))
+        // Android: "filename.ext (file attached)" or "(fayl əlavə olunub)"
+        foreach (var suf in new[] { " (file attached)", " (fayl əlavə olunub)" })
         {
-            var name = s[..^attachedSuffix.Length];
-            if (!string.IsNullOrEmpty(Path.GetExtension(name))) return name;
+            if (s.EndsWith(suf, StringComparison.OrdinalIgnoreCase))
+            {
+                var name = s[..^suf.Length];
+                if (!string.IsNullOrEmpty(Path.GetExtension(name))) return name;
+            }
         }
 
         var openIdx  = s.LastIndexOf('<');
