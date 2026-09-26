@@ -235,8 +235,20 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            await ShowErrorDialogAsync($"Fayl seçimində xəta:\n{ex.Message}");
+            await ShowErrorDialogAsync(TranslateError(ex));
         }
+    }
+
+    private static string TranslateError(Exception ex)
+    {
+        if (ex.Message.Contains("End of Central Directory") || ex.Message.Contains("central directory"))
+            return "ZIP faylı zədəlidir və ya tam yüklənməyib. Faylı yenidən yükləyib cəhd edin.";
+        if (ex.Message.Contains("Access to the path") || ex.Message.Contains("access"))
+            return $"Fayla giriş icazəsi yoxdur: {ex.Message}";
+        if (ex.Message.Contains("disk space") || ex.Message.Contains("storage"))
+            return "Yetərli disk yeri yoxdur.";
+        // Messages from ZipHandler/ChatProcessor are already in Azerbaijani
+        return ex.Message;
     }
 
     private async Task ShowErrorDialogAsync(string message)

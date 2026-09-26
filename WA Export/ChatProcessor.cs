@@ -136,7 +136,7 @@ public class ChatProcessor : INotifyPropertyChanged
                 Directory.GetFiles(tempDir, "_chat.txt", SearchOption.TopDirectoryOnly).FirstOrDefault()
                 ?? Directory.GetFiles(tempDir, "*.txt", SearchOption.TopDirectoryOnly)
                     .FirstOrDefault(f => !Path.GetFileName(f).StartsWith("."));
-            if (chatFile is null) throw new Exception("Chat faylı ZIP-də tapılmadı.");
+            if (chatFile is null) throw new Exception("Söhbət faylı (.txt) ZIP içində tapılmadı. ZIP faylı tam yüklənməyib və ya düzgün WhatsApp ixracı deyil.");
 
             Status = "Mesajlar oxunur…";
             var text     = File.ReadAllText(chatFile, System.Text.Encoding.UTF8);
