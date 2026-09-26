@@ -21,8 +21,8 @@ public static class ChatParser
         // Note: WhatsApp uses Narrow No-Break Space (U+202F) before AM/PM
         new(new Regex(@"^(\d{1,2}/\d{1,2}/\d{2,4}, \d{1,2}:\d{2}[  ][AP]M) - (.+?): (.*)"),
             ["M/d/yy, h:mm tt"]),
-        // Android Azerbaijani: DD.MM.YY HH:MM - Sender: message
-        new(new Regex(@"^(\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}) - (.+?): (.*)"),
+        // Android Azerbaijani: DD.MM.YY HH:MM - Sender: message  (group 3 optional for system messages)
+        new(new Regex(@"^(\d{2}\.\d{2}\.\d{2} \d{2}:\d{2}) - (.+?)(?:: (.*))?$"),
             ["dd.MM.yy HH:mm"]),
     ];
 
@@ -63,8 +63,9 @@ public static class ChatParser
 
                 Flush();
                 var dateStr = match.Groups[1].Value.Replace(NnbSp, ' ');
-                var sender  = match.Groups[2].Value;
-                var msgRaw  = match.Groups[3].Value;
+                var isMsg   = match.Groups[3].Success;
+                var sender  = isMsg ? match.Groups[2].Value : "";
+                var msgRaw  = isMsg ? match.Groups[3].Value : LtrMark + match.Groups[2].Value;
 
                 if (DateTime.TryParseExact(dateStr, fmt.DateFormats,
                     System.Globalization.CultureInfo.InvariantCulture,
