@@ -70,6 +70,10 @@ public sealed partial class MainWindow : Window
                     case nameof(ChatProcessor.Status):
                         StatusText.Text = _proc.Status;
                         break;
+                    case nameof(ChatProcessor.ErrorMessage):
+                        if (_proc.ErrorMessage is { } msg)
+                            _ = ShowErrorDialogAsync(msg);
+                        break;
                     case nameof(ChatProcessor.MyDisplayName):
                         if (MyNameBox.Text != _proc.MyDisplayName) MyNameBox.Text = _proc.MyDisplayName;
                         break;
@@ -209,16 +213,39 @@ public sealed partial class MainWindow : Window
 
     private async void OpenFileButton_Click(object sender, RoutedEventArgs e)
     {
-        var picker = new FileOpenPicker();
-        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
-        picker.FileTypeFilter.Add(".zip");
-        picker.SuggestedStartLocation = PickerLocationId.Downloads;
+        try
+        {
+            var picker = new FileOpenPicker();
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+            picker.FileTypeFilter.Add(".zip");
+            picker.SuggestedStartLocation = PickerLocationId.Downloads;
 
-        var file = await picker.PickSingleFileAsync();
-        if (file is null) return;
+            var file = await picker.PickSingleFileAsync();
+            if (file is null) return;
 
-        await _proc.ImportZipAsync(file.Path, new Progress<double>(v =>
-            DispatcherQueue.TryEnqueue(() => ProgressBar.Value = v)));
+            await _proc.ImportZipAsync(file.Path, new Progress<double>(v =>
+                DispatcherQueue.TryEnqueue(() => ProgressBar.Value = v)));
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorDialogAsync($"Fayl seçimində xəta:\n{ex.Message}");
+        }
+    }
+
+    private async Task ShowErrorDialogAsync(string message)
+    {
+        try
+        {
+            var dialog = new ContentDialog
+            {
+                Title             = "Xəta",
+                Content           = message,
+                CloseButtonText   = "Bağla",
+                XamlRoot          = Content.XamlRoot
+            };
+            await dialog.ShowAsync();
+        }
+        catch { }
     }
 
     private async void ExportButton_Click(object sender, RoutedEventArgs e)
