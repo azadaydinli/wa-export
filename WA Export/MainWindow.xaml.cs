@@ -223,7 +223,14 @@ public sealed partial class MainWindow : Window
             var file = await picker.PickSingleFileAsync();
             if (file is null) return;
 
-            await _proc.ImportZipAsync(file.Path, new Progress<double>(v =>
+            // Copy to local temp to handle cloud-only files (OneDrive, SharePoint, etc.)
+            // where file.Path exists on disk as a placeholder but has no real content.
+            var tmpZip = Path.Combine(Path.GetTempPath(), $"WAExport_in_{Guid.NewGuid():N}.zip");
+            using (var src = (await file.OpenReadAsync()).AsStreamForRead())
+            using (var dst = File.Create(tmpZip))
+                await src.CopyToAsync(dst);
+
+            await _proc.ImportZipAsync(tmpZip, new Progress<double>(v =>
                 DispatcherQueue.TryEnqueue(() => ProgressBar.Value = v)));
         }
         catch (Exception ex)
